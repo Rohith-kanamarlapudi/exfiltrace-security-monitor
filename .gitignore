@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ExfilTrace backend artifacts
+*.db
+*.db-wal
+*.db-shm
+*.pcap
+*.pcapng
