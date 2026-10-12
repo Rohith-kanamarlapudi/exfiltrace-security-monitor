@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Menu, Monitor } from 'lucide-react'
 import { getSystemStatus } from '../services/api'
 import { useApi } from '../hooks'
+import UsbSimulationControl from '../components/UsbSimulationControl'
 
 const pad = (n) => String(n).padStart(2, '0')
 
@@ -42,6 +43,7 @@ export default function Navbar({ onMenuClick }) {
       </div>
 
       <div className="flex items-center gap-4">
+        <UsbSimulationControl />
         <Clock />
         <span
           className={`flex items-center gap-2 rounded-sm border px-2.5 py-1 font-mono text-xs font-semibold tracking-wider ${

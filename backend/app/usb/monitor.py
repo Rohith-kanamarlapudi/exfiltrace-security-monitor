@@ -3,14 +3,18 @@ import logging
 import threading
 
 from .base import UsbBackendError
+from .processing import process_observation
+from .simulation import UsbSimulation
 
 log = logging.getLogger("exfiltrace.usb")
 
 
 class UsbMonitor:
-    def __init__(self, backend, interval=3.0, on_insert=None, on_remove=None, on_mounts_changed=None, history=None):
+    def __init__(self, backend, interval=3.0, on_insert=None, on_remove=None, on_mounts_changed=None, history=None, simulation_enabled=False):
         self.backend = backend
         self.history = history
+        self.simulation = UsbSimulation(simulation_enabled)
+        self._poll_lock = threading.RLock()
         self.interval = interval
         self.on_insert = on_insert or (lambda d, pre: None)
         self.on_remove = on_remove or (lambda d: None)
@@ -43,6 +47,42 @@ class UsbMonitor:
 
     # ---- polling ----
     def poll_once(self):
+        # Serialize OS queries, publication, callbacks and simulation mutations.
+        # The overlay never enters `current` or filesystem-watch callbacks.
+        with self._poll_lock:
+            self._poll_once()
+            try:
+                self.simulation.cycle(self.current, self.last_error is None)
+            except Exception as exc:
+                log.exception('Simulation processing failed; actual USB monitoring continues')
+                self.simulation.clear('cancelled', f'Simulation processing failed: {exc}. Actual observations are unaffected.')
+
+    def simulation_status(self):
+        with self._poll_lock:
+            return self.simulation.status(self.devices(), self.last_error is None)
+
+    def start_simulation(self, device_id):
+        with self._poll_lock:
+            if not self.simulation.enabled:
+                raise PermissionError('USB simulation is disabled by configuration.')
+            if self.simulation.baseline:
+                raise ValueError('Clear the active simulation before starting another.')
+            # Confirm live presence and process an unmodified observation first.
+            self.poll_once()
+            if self.last_error:
+                raise ValueError('Cannot confirm a complete connected observation: ' + self.last_error)
+            actual = self.current.get(device_id)
+            if not actual:
+                raise ValueError('Selected physical USB device is no longer connected.')
+            self.simulation.activate(actual)
+            return self.simulation_status()
+
+    def clear_simulation(self):
+        with self._poll_lock:
+            self.simulation.clear()
+            return self.simulation_status()
+
+    def _poll_once(self):
         """One diff cycle. Safe to call directly (used by tests)."""
         try:
             snapshot = {d["device_id"]: d for d in self.backend.snapshot()}
@@ -71,7 +111,7 @@ class UsbMonitor:
                 dev.setdefault('observationSource', self.backend.name)
                 if self.history and (complete or dev is not old.get(dev['device_id'])):
                     try:
-                        self.history.observe(dev)
+                        process_observation(dev, self.history)
                     except Exception as exc:
                         self.last_error = f'USB observation persistence failed: {exc}'
                         log.exception('USB observation persistence failed; retaining previous state')
@@ -116,3 +156,5 @@ class UsbMonitor:
         if self._thread:
             self._thread.join(timeout=5)
             self._thread = None
+        with self._poll_lock:
+            self.simulation.clear('cancelled', 'Monitoring stopped; simulation cancelled.')

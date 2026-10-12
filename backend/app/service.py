@@ -26,7 +26,8 @@ class MonitoringService:
         self.usb = UsbMonitor(
             backend, interval=float(self.config["usb"].get("poll_interval_seconds", 3)),
             on_insert=self._on_usb_insert, on_remove=self._on_usb_remove,
-            on_mounts_changed=self._on_usb_mounts_changed, history=UsbHistory(self.db))
+            on_mounts_changed=self._on_usb_mounts_changed, history=UsbHistory(self.db),
+            simulation_enabled=self.config['usb'].get('simulation_enabled', False))
         self.files = FileMonitor(self.config, self.db, volume_resolver=self.usb.volume_for,
                                  on_event=self._on_file_event)
         self.detector = DetectionEngine(self.config, self.db, self.usb)

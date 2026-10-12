@@ -1,6 +1,7 @@
 """Additive USB observations and change history in the existing SQLite database."""
 import json
 from datetime import datetime, timezone
+from .inspection import metadata_changes
 
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS usb_observations (
@@ -56,9 +57,7 @@ class UsbHistory:
                 previous = row['fingerprint'] if row else None
                 old = json.loads(row['characteristics']) if row and row['characteristics'] else None
                 new = fp['characteristics']
-                comparable = old and old.get('version') == new['version']
-                changes = ([{'field': k, 'before': old.get(k), 'after': new.get(k)} for k in sorted(new)
-                            if old.get(k) != new.get(k)] if comparable else [])
+                changes = metadata_changes(old, new)
                 conn.execute('INSERT INTO usb_fingerprint_history(identity,timestamp,fingerprint,previous_fingerprint,changes,version) VALUES (?,?,?,?,?,?)',
                              (identity, now, fp['sha256'], previous, json.dumps(changes), fp['version']))
                 conn.execute('UPDATE usb_observations SET fingerprint=?,characteristics=? WHERE identity=?',

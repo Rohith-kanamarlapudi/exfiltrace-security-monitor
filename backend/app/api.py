@@ -1,5 +1,7 @@
 """REST API (Flask). All routes live under /api and return {"data": ..., "source": "live"}."""
 import logging
+import ipaddress
+from urllib.parse import urlsplit
 
 from flask import Blueprint, Flask, jsonify, request
 
@@ -121,6 +123,54 @@ def usb_observations():
     return jsonify({'data': rows, 'total': len(rows), 'source': 'live'})
 
 
+def _local_simulation_request():
+    def local(host):
+        if host == 'localhost':
+            return True
+        try:
+            return ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            return False
+    origin = request.headers.get('Origin')
+    try:
+        return local(request.remote_addr or '') and local(urlsplit(request.host_url).hostname or '') and (
+            not origin or urlsplit(origin).scheme in ('http', 'https') and local(urlsplit(origin).hostname or ''))
+    except ValueError:
+        return False
+
+
+@bp.route('/usb/simulation', methods=['GET'], provide_automatic_options=False)
+def usb_simulation_status():
+    return jsonify({'data': svc().usb.simulation_status(), 'source': 'live'})
+
+
+@bp.route('/usb/simulation', methods=['POST', 'DELETE', 'OPTIONS'])
+def usb_simulation_mutation():
+    if not svc().usb.simulation.enabled:
+        return jsonify({'error': 'USB simulation is disabled by configuration.'}), 403
+    if not _local_simulation_request():
+        return jsonify({'error': 'Simulation controls require a local connection and local page origin.'}), 403
+    if request.method == 'OPTIONS':
+        return '', 204
+    if request.headers.get('X-ExfilTrace-Simulation') != '1':
+        return jsonify({'error': 'Explicit simulation request header required.'}), 403
+    if request.method == 'DELETE':
+        data = svc().usb.clear_simulation()
+    else:
+        if not request.is_json:
+            raise BadRequest('Expected application/json with deviceId.')
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict) or not isinstance(body.get('deviceId'), str) or not body['deviceId'].strip():
+            raise BadRequest('deviceId must be a nonempty physical device identifier.')
+        if not svc().usb.running:
+            return jsonify({'error': 'Start USB monitoring before activating an overlay.'}), 409
+        try:
+            data = svc().usb.start_simulation(body['deviceId'])
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 409
+    return jsonify({'data': data, 'source': 'live'})
+
+
 @bp.get("/alerts")
 def alerts():
     limit, offset = _int("limit", 200, 1, 1000), _int("offset", 0, 0, 10**9)
@@ -160,6 +210,13 @@ def create_app(config=None, service=None, autostart=True):
 
     @app.after_request
     def cors(resp):  # dev convenience: the Vite dev server proxies /api, but allow direct calls too
+        if request.path == '/api/usb/simulation' and request.method != 'GET':
+            if _local_simulation_request() and svc().usb.simulation.enabled:
+                resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', request.host_url.rstrip('/'))
+                resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-ExfilTrace-Simulation'
+                resp.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
+                resp.headers['Vary'] = 'Origin'
+            return resp
         resp.headers.setdefault("Access-Control-Allow-Origin", "*")
         resp.headers.setdefault("Access-Control-Allow-Headers", "Content-Type")
         return resp

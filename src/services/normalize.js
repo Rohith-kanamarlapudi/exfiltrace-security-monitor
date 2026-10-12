@@ -29,3 +29,10 @@ export function normalizeUsbDevices(payload) {
     inspection: d.inspection || null, fingerprint: d.fingerprint || null, observation: d.observation || null,
     observationSource: d.observationSource || 'unknown' })) }
 }
+
+export function normalizeUsbSimulation(payload) {
+  const data = normalizeObject(payload)
+  if (typeof data.enabled !== 'boolean' || typeof data.phase !== 'string' || !Array.isArray(data.devices)) throw new Error('Invalid USB simulation response')
+  if (data.alert && data.alert.simulated !== true || data.observation && data.observation.simulated !== true) throw new Error('Simulation response must explicitly mark synthetic observations and alerts')
+  return data
+}

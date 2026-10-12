@@ -23,7 +23,7 @@ DEFAULTS = {
         "directories": [".git", "node_modules", "__pycache__", "System Volume Information", "$RECYCLE.BIN"],
     },
     "dedupe_window_seconds": 1.5,
-    "usb": {"backend": "auto", "poll_interval_seconds": 3, "simulated_file": "data/simulated_usb.json"},
+    "usb": {"backend": "auto", "poll_interval_seconds": 3, "simulated_file": "data/simulated_usb.json", "simulation_enabled": False},
     "detection": {
         "correlation_window_seconds": 600,
         "bulk_file_threshold": 10,
@@ -66,6 +66,8 @@ class Config:
             raw = {}
         except (OSError, json.JSONDecodeError) as exc:
             raise ConfigError(f"Cannot read config file {path}: {exc}") from exc
+        if os.environ.get('EXFILTRACE_USB_SIMULATION') == '1':
+            raw.setdefault('usb', {})['simulation_enabled'] = True
         return cls(raw, path=path)
 
     def resolve_path(self, value):

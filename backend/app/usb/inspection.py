@@ -8,6 +8,13 @@ from .base import normalize_device, UsbBackendError
 VERSION = 'windows-pnp-metadata-v1'
 
 
+def metadata_changes(before, after):
+    if not before or before.get('version') != after.get('version'):
+        return []
+    return [{'field': key, 'before': before.get(key), 'after': after.get(key)}
+            for key in sorted(after) if before.get(key) != after.get(key)]
+
+
 def canonical_metadata(device):
     """No identity, topology, connection, mounts or observation fields in hash."""
     interfaces = [{k: i.get(k) for k in ('pnpClass', 'hardwareIds', 'compatibleIds', 'functions')}

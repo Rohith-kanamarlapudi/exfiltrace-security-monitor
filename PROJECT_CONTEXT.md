@@ -69,7 +69,7 @@ genuinely needs OS-specific APIs (the USB and Windows-forensics modules do).
 
 | Part | Synopsis module | Branch | Folder | Status | Depends on |
 |------|-----------------|--------|--------|--------|------------|
-| 1. USB Forensics + BadUSB Detection | Module 3: USB Forensics & Evidence Protection | `feature/usb` (suggested) | `backend/app/usb/` (actual) | storage + PnP interfaces + metadata fingerprint history implemented; BadUSB pending | — |
+| 1. USB Forensics + BadUSB Detection | Module 3: USB Forensics & Evidence Protection | `feature/usb` (suggested) | `backend/app/usb/` (actual) | storage + PnP interfaces + metadata fingerprint history + isolated BadUSB simulation implemented; physical verdicts pending | — |
 | 2. File Monitoring + USB Data-Theft Detection | Module 6: Windows Forensics (File Monitoring) | `feature/files` (suggested) | `backend/app/` (actual) | monitoring and live frontend implemented | USB device/volume association |
 | 3. Network Monitoring + Anomaly Detection | Module 7: Traffic Analysis | `feature/np` | `backend/network/` | **done (v0.1.0)** | — |
 | 4. Correlation Engine + Backend Integration + Reports | Correlation + Backend + Reports (XML) | `feature/correlation` (suggested) | `backend/app/` (file/USB service) | file/USB integrated; network and reports pending | parts 1, 2, 3 |
@@ -231,7 +231,25 @@ Partial queries defer removals and fingerprint comparisons; failures retain the
 last snapshot and expose `usb_monitor.last_error`. Mount watches and existing
 file-copy detection remain integrated. Metadata hashes are not descriptor hashes
 or authentication. First-seen/changed/composite status is not a BadUSB verdict.
-BadUSB detection and software write protection remain unavailable.
+Physical BadUSB verdicts and software write protection remain unavailable.
+
+An explicit, default-off `usb.simulation_enabled` flag (or process environment
+`EXFILTRACE_USB_SIMULATION=1`) enables the header's Simulate BadUSB control.
+`/api/usb/simulation` GET reads state, guarded local POST selects a connected
+physical storage-only device, and guarded DELETE clears the overlay. Activation
+processes unmodified actual metadata first. The next complete cycle copies that
+observation and adds a marked synthetic keyboard/HID function, then uses shared
+canonical hashing, comparison/history and the keyboard-addition rule. History is
+isolated in memory and its finding is labeled SIMULATED, displayed separately on
+USB Forensics and Dashboard, with the affected physical identity highlighted in
+both connected-device lists, and excluded from real security totals. Simulation disclosure and
+clear/reset controls appear only in the header dropdown; the Forensics page
+projects the active keyboard/HID interface into the selected device details with
+neutral wording, while API provenance remains explicit. Real objects, SQLite history,
+alerts and watches remain untouched by synthetic data. Partial queries pause;
+confirmed disconnect, genuine baseline change and monitor stop cancel it. Reset
+never produces a reverse hardware-change finding. See the USB README for exact
+Windows startup commands, endpoint guards, eligibility and validation limitations.
 
 | Endpoint | `api.js` key | Shape (from `mockUsbDevices`) |
 |----------|--------------|-------------------------------|
@@ -315,7 +333,8 @@ shape. *Suggestion — confirm and record the real name here later.*
 - [x] Regression coverage for multiple mounted volumes, unmounted disks, poll failures and recovery.
 - [x] Enumerate physical USB/PnP functions with identifiers, ancestry, available serials and connection observations.
 - [x] Versioned metadata SHA-256 fingerprints, SQLite observations/history, completeness and webpage integration.
-- [ ] BadUSB/impersonation detection (metadata changes alone are not verdicts).
+- [x] Isolated, opt-in physical-device BadUSB observation overlay and explainable unexpected-keyboard rule.
+- [ ] Physical BadUSB/impersonation verdicts (metadata changes alone are not proof).
 - [ ] Software write-blocking for evidence protection.
 - [x] Additive real inspection API fields and frontend normalization; unsupported mock capabilities remain unavailable.
 - [ ] Plain-Python USB-session accessor for the correlation engine.

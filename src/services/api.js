@@ -1,5 +1,5 @@
 ﻿import { mockNetworkEvents, mockNetworkStats, mockTrafficSeries, mockIncidents, mockReports } from '../data/mockData.js'
-import { normalizeList, normalizeObject, normalizeUsbDevices } from './normalize.js'
+import { normalizeList, normalizeObject, normalizeUsbDevices, normalizeUsbSimulation } from './normalize.js'
 
 // Direct requests; Flask enables CORS. VITE_API_URL includes /api.
 export const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://127.0.0.1:5000/api').replace(/\/$/, '')
@@ -16,6 +16,17 @@ export async function get(path, { signal } = {}) {
 const list = (path) => async (options) => normalizeList(await get(path, options))
 export const getSystemStatus = async (options) => normalizeObject(await get(ENDPOINTS.status, options))
 export const getUsbDevices = async (options) => normalizeUsbDevices(await get(ENDPOINTS.usbDevices, options))
+export const getUsbSimulation = async (options) => normalizeUsbSimulation(await get('/usb/simulation', options))
+async function changeUsbSimulation(method, body) {
+  const response = await fetch(`${API_BASE_URL}/usb/simulation`, { method, cache: 'no-store',
+    headers: { 'Content-Type': 'application/json', 'X-ExfilTrace-Simulation': '1' },
+    ...(body ? { body: JSON.stringify(body) } : {}) })
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload.error || `USB simulation: HTTP ${response.status}`)
+  return normalizeUsbSimulation(payload)
+}
+export const startUsbSimulation = (deviceId) => changeUsbSimulation('POST', { deviceId })
+export const clearUsbSimulation = () => changeUsbSimulation('DELETE')
 export const getUsbEvents = list(`${ENDPOINTS.usbEvents}?limit=200`)
 export const getFileEvents = list(`${ENDPOINTS.fileEvents}?limit=200`)
 export const getSensitiveFiles = list(`${ENDPOINTS.sensitiveFiles}?limit=100`)
