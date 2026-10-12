@@ -1,0 +1,8 @@
+# Runtime dependencies for the ExfilTrace network module.
+# Install:  pip install -r backend/network/requirements.txt
+Flask>=3.0
+flask-cors>=4.0
+
+# Live packet capture (only needed for real sniffing; simulation works without it).
+# pyshark talks to TShark, which must also be installed on the OS (see README).
+pyshark>=0.6
