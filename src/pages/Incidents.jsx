@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Activity, FileSearch, GitMerge, Globe, ShieldAlert, Usb } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import PreviewNotice from '../components/PreviewNotice'
 import Panel from '../components/Panel'
 import IncidentCard from '../components/IncidentCard'
 import IncidentTimeline from '../components/IncidentTimeline'
@@ -112,7 +113,7 @@ function IncidentDetails({ incident }) {
 }
 
 export default function Incidents() {
-  const { data: incidents, loading } = useApi(getIncidents)
+  const { data: incidents, loading } = useApi(getIncidents, 0)
   const [selectedId, setSelectedId] = useState(null)
 
   if (loading) return <LoadingState label="Loading incidents..." />
@@ -121,7 +122,8 @@ export default function Incidents() {
 
   return (
     <>
-      <PageHeader title="Security Incidents" subtitle="Correlated USB, file and network events grouped by session">
+      <PreviewNotice />
+      <PageHeader title="Security Incidents — sample preview" subtitle="Unified incident integration is unavailable">
         <span className="flex items-center gap-2 font-mono text-xs text-ink-dim">
           <ShieldAlert size={14} className="text-crit" />
           {incidents.filter((i) => i.status !== 'RESOLVED').length} open

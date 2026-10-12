@@ -69,13 +69,13 @@ genuinely needs OS-specific APIs (the USB and Windows-forensics modules do).
 
 | Part | Synopsis module | Branch | Folder | Status | Depends on |
 |------|-----------------|--------|--------|--------|------------|
-| 1. USB Forensics + BadUSB Detection | Module 3: USB Forensics & Evidence Protection | `feature/usb` (suggested) | `backend/usb/` (suggested) | not started | — |
-| 2. File Monitoring + USB Data-Theft Detection | Module 6: Windows Forensics (File Monitoring) | `feature/files` (suggested) | `backend/files/` (suggested) | not started | benefits from part 1 (session timestamps) |
+| 1. USB Forensics + BadUSB Detection | Module 3: USB Forensics & Evidence Protection | `feature/usb` (suggested) | `backend/app/usb/` (actual) | storage monitoring implemented; full forensics pending | — |
+| 2. File Monitoring + USB Data-Theft Detection | Module 6: Windows Forensics (File Monitoring) | `feature/files` (suggested) | `backend/app/` (actual) | monitoring and live frontend implemented | USB device/volume association |
 | 3. Network Monitoring + Anomaly Detection | Module 7: Traffic Analysis | `feature/np` | `backend/network/` | **done (v0.1.0)** | — |
-| 4. Correlation Engine + Backend Integration + Reports | Correlation + Backend + Reports (XML) | `feature/correlation` (suggested) | `backend/core/` (suggested) | not started | parts 1, 2, 3 |
+| 4. Correlation Engine + Backend Integration + Reports | Correlation + Backend + Reports (XML) | `feature/correlation` (suggested) | `backend/app/` (file/USB service) | file/USB integrated; network and reports pending | parts 1, 2, 3 |
 
-Branches/folders for parts 1, 2 and 4 are **suggested**; only part 3 exists in
-the repo today. Confirm with the team before creating them.
+Branch names remain suggested. The actual file/USB backend is `backend/app/`,
+started with `backend/run.py`; the separate network module is `backend/network/`.
 
 ---
 
@@ -92,8 +92,14 @@ the repo today. Confirm with the team before creating them.
 | `.gitignore` | Ignores `*.db`, `*.pcap`, `dist/`, `node_modules/`, caches. |
 | `PROJECT_CONTEXT.md` / `AGENTS.md` | This file + agent entry pointer. |
 
-`src/hooks.js` provides `useApi(fetcher) -> { data, loading, error }`; pages call
-`api.js` functions and render loading / error / data states.
+`src/hooks.js` provides `useApi(fetcher) -> { data, loading, error, updatedAt }`.
+The live file/USB pages poll approximately every three seconds, retain successful
+data on refresh failure, abort on unmount, and visibly mark stale results.
+`src/services/normalize.js` adapts the actual Flask `{data, source, total?}`
+wrappers and snake_case fields to camelCase; list results expose `items`, `total`
+and `limit`. The existing backend shapes are preserved rather than replaced with
+the proposed mock contracts below. `README.md` documents direct HTTP/CORS setup
+and `VITE_API_URL` (default `http://127.0.0.1:5000/api`); Vite has no API proxy.
 
 ---
 
@@ -197,11 +203,24 @@ python -m pytest backend/network/tests -q     # 24 tests
 
 ## 7. Contracts the other modules must provide
 
-> **Inferred** from `src/data/mockData.js` and the `ENDPOINTS` object in
-> `src/services/api.js`. These modules are **not implemented yet** — the shapes
-> below are what the frontend already expects, so the backend must match them.
+> The tables below describe the original proposed mock UI contracts. The actual
+> file/USB backend is implemented in `backend/app/` and returns wrapped snake_case
+> data. The frontend now normalizes those responses and omits unsupported mock
+> fields; see section 4 and `README.md` for the live integration.
 
 ### USB module (part 1) — suggested `backend/usb/`
+
+**Current implementation:** USB storage enumeration lives in `backend/app/usb/`;
+USB regression tests live in `backend/tests/test_usb.py`. The integrated service
+uses the existing device fields (`device_id`, `mounts`, etc.), and API responses
+wrap them in `data`; the table below remains the proposed frontend contract.
+Windows maps disk → partitions → logical drives using `Get-CimAssociatedInstance`
+with `Win32_DiskDriveToDiskPartition` and `Win32_LogicalDiskToPartition`.
+All mounted drive roots are passed to the file-monitor callbacks; disks without
+mounted volumes remain connected with an empty `mounts` list. Poll failures are
+reported as `data.usb_monitor.last_error` in `/api/status`, retain the previous
+snapshot, and clear after a successful poll. Empty or invalid PowerShell output
+is an error; a valid empty disk list means no USB storage is connected.
 
 | Endpoint | `api.js` key | Shape (from `mockUsbDevices`) |
 |----------|--------------|-------------------------------|
@@ -257,8 +276,9 @@ shape. *Suggestion — confirm and record the real name here later.*
   unavailable without them; the network module's **simulation mode** works
   without either.
 * **Stop your dev servers** (backend + `npm run dev`) after testing.
-* **The frontend still runs on mock data.** Each page is switched to the real
-  API one function at a time inside `src/services/api.js`.
+* **Dashboard, USB Forensics and File Monitoring use live file/USB data.**
+  Network Analysis, unified Incidents and Reports are labeled sample previews.
+  Network is not connected and sample findings never appear on the live dashboard.
 * **Times shown in the browser are local time** (IST here) while the API stores
   UTC — expected.
 
@@ -277,20 +297,27 @@ shape. *Suggestion — confirm and record the real name here later.*
 - [ ] Fix/explain the 96-byte DNS packet to the exfil IP being flagged HIGH.
 - [ ] Wire capture start/stop to USB session start/stop (depends on **part 1**).
 
-### B. USB module (part 1 — not started)
+### B. USB module (part 1 — storage monitoring implemented)
+- [x] Windows CIM USB storage enumeration and disk/partition/drive-letter mapping.
+- [x] Startup, insertion, removal and mount-change callbacks into file monitoring.
+- [x] Existing `/api/usb/devices` and `/api/status` routes in the integrated backend (current shapes preserved).
+- [x] Regression coverage for multiple mounted volumes, unmounted disks, poll failures and recovery.
 - [ ] Enumerate devices (WMI + Registry), record VID/PID/serial + connect/disconnect times.
 - [ ] Fingerprint devices and flag BadUSB/impersonation.
 - [ ] Software write-blocking for evidence protection.
 - [ ] `GET /api/usb/devices` (+ `/api/status`) matching the mock shape.
 - [ ] Plain-Python USB-session accessor for the correlation engine.
-- [ ] Tests.
+- [ ] Physical unplug/replug and multi-partition Windows hardware verification (automated coverage exists).
 
-### C. File module (part 2 — not started)
-- [ ] `watchdog` monitor over the sensitive-file watchlist.
-- [ ] Correlate file events with USB session timestamps (needs **part 1** session ids).
-- [ ] `GET /api/files/events`, `/api/files/sensitive`, `/api/files/stats` matching mocks.
+### C. File module (part 2 — file/USB monitoring implemented in `backend/app/`)
+- [x] `watchdog` monitoring over configured directories and discovered USB volumes.
+- [x] Existing file event, sensitive-path and statistics endpoints connected to the frontend through response normalization.
+- [x] Content-matching file/USB alerts with explanations, evidence and verdicts displayed live.
+- [x] File event values preserved: CREATED, MODIFIED, DELETED and RENAMED.
+- [x] Recorded-event and distinct observed sensitive-path counts labeled accurately; unsupported attribution omitted.
+- [ ] USB session IDs (current integration uses device/volume and event IDs).
 - [ ] Plain-Python file-events-in-window accessor for the correlation engine.
-- [ ] Tests.
+- [x] Backend monitoring/detection tests and frontend normalization/polling tests.
 
 ### D. Correlation + backend integration + Reports (part 4 — not started; do last)
 - [ ] Flask app factory that mounts every module blueprint under `/api`.

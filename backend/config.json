@@ -1,5 +1,5 @@
 {
-  "monitored_directories": [],
+  "monitored_directories": ["C:/ExfilTraceTest"],
   "database_path": "data/exfiltrace.db",
   "sensitive_rules": {
     "extensions": [
@@ -53,7 +53,7 @@
   },
   "dedupe_window_seconds": 1.5,
   "usb": {
-    "backend": "auto",
+    "backend": "windows",
     "poll_interval_seconds": 3,
     "simulated_file": "data/simulated_usb.json"
   },

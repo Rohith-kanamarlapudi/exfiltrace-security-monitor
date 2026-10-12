@@ -1,18 +1,13 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
+import { startPolling, applyPollResult } from './services/polling.js'
 
-// Loads data from an api.js function once. Returns { data, loading, error }.
-export function useApi(fetcher) {
-  const [state, setState] = useState({ data: null, loading: true, error: null })
-
+export function useApi(fetcher, interval = 3000) {
+  const initial = { data: null, loading: true, error: null, updatedAt: null }
+  const [state, setState] = useState(() => ({ ...initial, fetcher }))
   useEffect(() => {
-    let cancelled = false
-    fetcher()
-      .then((data) => !cancelled && setState({ data, loading: false, error: null }))
-      .catch((error) => !cancelled && setState({ data: null, loading: false, error }))
-    return () => {
-      cancelled = true
-    }
-  }, [fetcher])
-
-  return state
+    return startPolling(fetcher, (result) => setState((previous) => ({
+      ...applyPollResult(previous.fetcher === fetcher ? previous : { data: null, updatedAt: null }, result), fetcher,
+    })), { interval })
+  }, [fetcher, interval])
+  return state.fetcher === fetcher ? state : initial
 }

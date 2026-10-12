@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Download, Eye, EyeOff, FileText, Info, X } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import PreviewNotice from '../components/PreviewNotice'
 import Panel from '../components/Panel'
 import RiskBadge from '../components/RiskBadge'
 import IncidentTimeline from '../components/IncidentTimeline'
@@ -73,7 +74,7 @@ function ReportCard({ report, expanded, onToggle, onExport }) {
 }
 
 export default function Reports() {
-  const { data: reports, loading } = useApi(getReports)
+  const { data: reports, loading } = useApi(getReports, 0)
   const [expandedId, setExpandedId] = useState(null)
   const [notice, setNotice] = useState(null)
 
@@ -85,7 +86,8 @@ export default function Reports() {
 
   return (
     <>
-      <PageHeader title="Security Reports" subtitle="Generated incident reports for review and handover">
+      <PreviewNotice />
+      <PageHeader title="Security Reports — sample preview" subtitle="Live report generation is unavailable">
         <span className="flex items-center gap-2 font-mono text-xs text-ink-dim">
           <FileText size={14} />
           {reports.length} reports

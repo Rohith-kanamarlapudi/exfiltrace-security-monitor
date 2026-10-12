@@ -1,5 +1,9 @@
 // File action label (CREATE, MODIFY, ACCESS, COPY, DELETE, MOVE)
 const ACTION_STYLE = {
+  CREATED: 'text-safe',
+  MODIFIED: 'text-accent',
+  DELETED: 'text-crit',
+  RENAMED: 'text-accent',
   CREATE: 'text-safe',
   MODIFY: 'text-accent',
   ACCESS: 'text-ink-dim',

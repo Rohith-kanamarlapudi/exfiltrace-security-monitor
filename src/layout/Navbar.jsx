@@ -19,8 +19,8 @@ function Clock() {
 }
 
 export default function Navbar({ onMenuClick }) {
-  const { data: status } = useApi(getSystemStatus)
-  const active = status ? status.monitoring : true
+  const { data: status, error } = useApi(getSystemStatus)
+  const active = status?.running && status.fileMonitor.running && status.usbMonitor.running && !error && !status.usbMonitor.lastError && !status.fileMonitor.errors.length && !status.detection.errors.length
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-line bg-panel/95 px-4 backdrop-blur lg:px-6">
@@ -49,7 +49,7 @@ export default function Navbar({ onMenuClick }) {
           }`}
         >
           <span className={`h-2 w-2 rounded-full bg-current ${active ? 'pulse-dot' : ''}`} />
-          {active ? 'MONITORING ACTIVE' : 'MONITORING OFFLINE'}
+          {error ? 'STATUS UNAVAILABLE / STALE' : !status ? 'CONNECTING' : active ? 'FILE / USB MONITORING ACTIVE' : status.running ? 'MONITORING DEGRADED' : 'MONITORING STOPPED'}
         </span>
       </div>
     </header>

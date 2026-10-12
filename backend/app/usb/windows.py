@@ -16,9 +16,9 @@ $ErrorActionPreference = 'Stop'
 $disks = @()
 foreach ($disk in (Get-CimInstance Win32_DiskDrive | Where-Object { $_.InterfaceType -eq 'USB' -or $_.PNPDeviceID -like 'USBSTOR*' })) {
   $vols = @()
-  $escaped = $disk.DeviceID.Replace('\', '\\')
-  foreach ($part in (Get-CimInstance -Query "ASSOCIATORS OF {Win32_DiskDrive.DeviceID='$escaped'} WHERE AssocClass=Win32_DiskDriveToDiskPartition")) {
-    foreach ($ld in (Get-CimInstance -Query "ASSOCIATORS OF {Win32_DiskPartition.DeviceID='$($part.DeviceID)'} WHERE AssocClass=Win32_LogicalDiskToPartition")) {
+  # Use the provider's CIM object path rather than rebuilding/escaping DeviceID.
+  foreach ($part in (Get-CimAssociatedInstance -InputObject $disk -Association Win32_DiskDriveToDiskPartition -ResultClassName Win32_DiskPartition)) {
+    foreach ($ld in (Get-CimAssociatedInstance -InputObject $part -Association Win32_LogicalDiskToPartition -ResultClassName Win32_LogicalDisk)) {
       $vols += [pscustomobject]@{ drive = $ld.DeviceID; label = $ld.VolumeName; fs = $ld.FileSystem; size = $ld.Size }
     }
   }
@@ -52,9 +52,11 @@ def _vendor_product_from_pnp(pnp):
 def parse_powershell_output(text):
     """Pure function (unit tested on any OS): PowerShell JSON -> list of normalized devices."""
     try:
-        data = json.loads(text) if text.strip() else {}
+        data = json.loads(text)
     except json.JSONDecodeError as exc:
         raise UsbBackendError(f"Unreadable PowerShell output: {exc}") from exc
+    if not isinstance(data, dict) or not all(key in data for key in ("disks", "usb_ids")):
+        raise UsbBackendError("Invalid PowerShell snapshot: expected disks and usb_ids")
     usb_ids = _as_list(data.get("usb_ids"))
     devices = []
     for disk in _as_list(data.get("disks")):
@@ -98,5 +100,6 @@ class WindowsUsbBackend(UsbBackend):
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise UsbBackendError(f"PowerShell failed: {exc}") from exc
         if proc.returncode != 0:
-            raise UsbBackendError(f"PowerShell exited {proc.returncode}: {proc.stderr.strip()[:300]}")
+            detail = proc.stderr.strip() or proc.stdout.strip() or "no diagnostic output"
+            raise UsbBackendError(f"PowerShell exited {proc.returncode}: {detail[:2000]}")
         return parse_powershell_output(proc.stdout)

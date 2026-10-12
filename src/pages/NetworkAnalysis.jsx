@@ -1,5 +1,6 @@
 import { Activity, AlertTriangle, ArrowUpRight, Network, Radio } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import PreviewNotice from '../components/PreviewNotice'
 import Panel from '../components/Panel'
 import StatCard from '../components/StatCard'
 import Chart from '../components/Chart'
@@ -10,9 +11,9 @@ import { getNetworkEvents, getNetworkStats, getTrafficSeries } from '../services
 import { formatBytes, formatNumber } from '../utils/format'
 
 export default function NetworkAnalysis() {
-  const events = useApi(getNetworkEvents)
-  const stats = useApi(getNetworkStats)
-  const series = useApi(getTrafficSeries)
+  const events = useApi(getNetworkEvents, 0)
+  const stats = useApi(getNetworkStats, 0)
+  const series = useApi(getTrafficSeries, 0)
 
   if (events.loading || stats.loading || series.loading) return <LoadingState label="Loading network traffic..." />
 
@@ -20,7 +21,8 @@ export default function NetworkAnalysis() {
 
   return (
     <>
-      <PageHeader title="Network Analysis" subtitle="Captured traffic and suspicious outbound connections" />
+      <PreviewNotice />
+      <PageHeader title="Network Analysis — sample preview" subtitle="Network monitoring is not connected" />
 
       <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
         <StatCard label="Packets Captured" value={formatNumber(stats.data.packetsCaptured)} sub="since agent start" icon={Radio} />

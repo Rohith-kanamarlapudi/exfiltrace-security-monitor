@@ -1,63 +1,29 @@
-// ---------------------------------------------------------------------------
-// API layer.
-//
-// Every page gets its data from here. Today each function resolves with mock
-// data; to connect the Python REST API later, replace the body of each
-// function with a fetch() call to the matching endpoint (see ENDPOINTS) and
-// keep the returned shape the same.
-// ---------------------------------------------------------------------------
-import {
-  mockSystemStatus,
-  mockDashboardStats,
-  mockUsbDevices,
-  mockFileEvents,
-  mockSensitiveFiles,
-  mockFileStats,
-  mockNetworkEvents,
-  mockNetworkStats,
-  mockTrafficSeries,
-  mockIncidents,
-  mockAlerts,
-  mockReports,
-} from '../data/mockData'
+﻿import { mockNetworkEvents, mockNetworkStats, mockTrafficSeries, mockIncidents, mockReports } from '../data/mockData.js'
+import { normalizeList, normalizeObject } from './normalize.js'
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'
-
-// Planned REST endpoints (Python API -> SQLite)
+// Direct requests; Flask enables CORS. VITE_API_URL includes /api.
+export const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://127.0.0.1:5000/api').replace(/\/$/, '')
 export const ENDPOINTS = {
-  status: '/status',
-  dashboard: '/dashboard',
-  usbDevices: '/usb/devices',
-  fileEvents: '/files/events',
-  sensitiveFiles: '/files/sensitive',
-  fileStats: '/files/stats',
-  networkEvents: '/network/events',
-  networkStats: '/network/stats',
-  trafficSeries: '/network/traffic',
-  incidents: '/incidents',
-  alerts: '/alerts',
-  reports: '/reports',
+  status: '/status', usbDevices: '/usb/devices', usbEvents: '/usb/events',
+  fileEvents: '/files/events', sensitiveFiles: '/files/sensitive', fileStats: '/files/stats', alerts: '/alerts',
 }
-
-// Example of what a real call will look like:
-// async function get(path) {
-//   const res = await fetch(`${API_BASE_URL}${path}`)
-//   if (!res.ok) throw new Error(`Request failed: ${res.status}`)
-//   return res.json()
-// }
-
-// Simulated network latency so loading states behave like a real API.
-const delay = (data, ms = 150) => new Promise((resolve) => setTimeout(() => resolve(data), ms))
-
-export const getSystemStatus = () => delay(mockSystemStatus)
-export const getDashboardStats = () => delay(mockDashboardStats)
-export const getUsbDevices = () => delay(mockUsbDevices)
-export const getFileEvents = () => delay(mockFileEvents)
-export const getSensitiveFiles = () => delay(mockSensitiveFiles)
-export const getFileStats = () => delay(mockFileStats)
-export const getNetworkEvents = () => delay(mockNetworkEvents)
-export const getNetworkStats = () => delay(mockNetworkStats)
-export const getTrafficSeries = () => delay(mockTrafficSeries)
-export const getIncidents = () => delay(mockIncidents)
-export const getAlerts = () => delay(mockAlerts)
-export const getReports = () => delay(mockReports)
+export async function get(path, { signal } = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, { signal, cache: 'no-store' })
+  if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`)
+  try { return await response.json() }
+  catch { throw new Error(`${path}: invalid JSON response`) }
+}
+const list = (path) => async (options) => normalizeList(await get(path, options))
+export const getSystemStatus = async (options) => normalizeObject(await get(ENDPOINTS.status, options))
+export const getUsbDevices = list(ENDPOINTS.usbDevices)
+export const getUsbEvents = list(`${ENDPOINTS.usbEvents}?limit=200`)
+export const getFileEvents = list(`${ENDPOINTS.fileEvents}?limit=200`)
+export const getSensitiveFiles = list(`${ENDPOINTS.sensitiveFiles}?limit=100`)
+export const getFileStats = async (options) => normalizeObject(await get(ENDPOINTS.fileStats, options))
+export const getAlerts = list(`${ENDPOINTS.alerts}?limit=200`)
+// Explicit preview pages only; never a fallback for failed live requests.
+export const getNetworkEvents = async () => mockNetworkEvents
+export const getNetworkStats = async () => mockNetworkStats
+export const getTrafficSeries = async () => mockTrafficSeries
+export const getIncidents = async () => mockIncidents
+export const getReports = async () => mockReports

@@ -51,9 +51,8 @@ export default function Sidebar({ open, onClose }) {
         </nav>
 
         <div className="border-t border-line p-4 font-mono text-[11px] leading-relaxed text-ink-faint">
-          <p>USB / FILE / NETWORK</p>
-          <p>Exfiltration Monitor</p>
-          <p className="mt-1">v0.4.2</p>
+          <p>LIVE FILE / USB MONITORING</p>
+          <p>Network not connected</p>
         </div>
       </aside>
     </>
