@@ -1,0 +1,9 @@
+# Local database, captures and caches for the network module.
+*.db
+*.db-wal
+*.db-shm
+*.pcap
+*.pcapng
+__pycache__/
+.pytest_cache/
+.venv/
