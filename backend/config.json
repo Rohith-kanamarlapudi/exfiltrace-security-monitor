@@ -1,0 +1,77 @@
+{
+  "monitored_directories": [],
+  "database_path": "data/exfiltrace.db",
+  "sensitive_rules": {
+    "extensions": [
+      ".kdbx",
+      ".pem",
+      ".key",
+      ".pfx",
+      ".p12",
+      ".sql",
+      ".bak",
+      ".env"
+    ],
+    "filename_keywords": [
+      "confidential",
+      "password",
+      "passwords",
+      "credential",
+      "secret",
+      "employee",
+      "salary",
+      "payroll",
+      "private",
+      "project_data"
+    ],
+    "directories": [
+      "confidential",
+      "hr",
+      "finance",
+      "secrets"
+    ]
+  },
+  "exclusions": {
+    "patterns": [
+      "*.tmp",
+      "*.swp",
+      "~$*",
+      "*.crdownload",
+      "Thumbs.db",
+      "desktop.ini",
+      "*.db-journal",
+      "*.db-wal",
+      "*.db-shm"
+    ],
+    "directories": [
+      ".git",
+      "node_modules",
+      "__pycache__",
+      "System Volume Information",
+      "$RECYCLE.BIN"
+    ]
+  },
+  "dedupe_window_seconds": 1.5,
+  "usb": {
+    "backend": "auto",
+    "poll_interval_seconds": 3,
+    "simulated_file": "data/simulated_usb.json"
+  },
+  "detection": {
+    "correlation_window_seconds": 600,
+    "bulk_file_threshold": 10,
+    "bulk_window_seconds": 120,
+    "archive_extensions": [
+      ".zip",
+      ".7z",
+      ".rar",
+      ".tar",
+      ".gz"
+    ],
+    "max_hash_bytes": 268435456
+  },
+  "api": {
+    "host": "127.0.0.1",
+    "port": 5000
+  }
+}
