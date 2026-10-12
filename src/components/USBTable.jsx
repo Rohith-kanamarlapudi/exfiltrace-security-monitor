@@ -2,7 +2,8 @@
 import { formatBytes } from '../utils/format'
 const mono = 'font-mono text-xs text-ink-dim'
 const columns = [
-  { key: 'name', header: 'Connected storage device' },
+  { key: 'name', header: 'Physical USB device' },
+  { key: 'functions', header: 'Functions', render: (d) => d.inspection?.functions?.join(', ') || 'Unavailable' },
   { key: 'mounts', header: 'Mounted volumes', render: (d) => d.mounts.join(', ') || 'No mounted volumes', className: mono },
   { key: 'vendorId', header: 'VID', render: (d) => d.vendorId || 'Unavailable', className: mono },
   { key: 'productId', header: 'PID', render: (d) => d.productId || 'Unavailable', className: mono },
@@ -11,5 +12,5 @@ const columns = [
   { key: 'sizeBytes', header: 'Disk size', render: (d) => formatBytes(d.sizeBytes), className: mono },
 ]
 export default function USBTable({ devices, onSelect, selectedId }) {
-  return <DataTable columns={columns} rows={devices} onRowClick={onSelect} selectedId={selectedId} emptyText="No USB storage devices in the last successful snapshot." />
+  return <DataTable columns={columns} rows={devices} onRowClick={onSelect} selectedId={selectedId} emptyText="No USB devices in the last successful snapshot." />
 }

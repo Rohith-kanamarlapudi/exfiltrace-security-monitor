@@ -8,8 +8,9 @@ log = logging.getLogger("exfiltrace.usb")
 
 
 class UsbMonitor:
-    def __init__(self, backend, interval=3.0, on_insert=None, on_remove=None, on_mounts_changed=None):
+    def __init__(self, backend, interval=3.0, on_insert=None, on_remove=None, on_mounts_changed=None, history=None):
         self.backend = backend
+        self.history = history
         self.interval = interval
         self.on_insert = on_insert or (lambda d, pre: None)
         self.on_remove = on_remove or (lambda d: None)
@@ -45,7 +46,8 @@ class UsbMonitor:
         """One diff cycle. Safe to call directly (used by tests)."""
         try:
             snapshot = {d["device_id"]: d for d in self.backend.snapshot()}
-            self.last_error = None
+            complete = getattr(self.backend, 'snapshot_complete', True)
+            self.last_error = None if complete else 'Partial USB inspection; removals and fingerprint comparisons deferred'
         except UsbBackendError as exc:
             self.last_error = str(exc)
             log.warning("USB poll failed: %s", exc)
@@ -58,6 +60,22 @@ class UsbMonitor:
         self.polls += 1
         with self._lock:
             old = self.current
+            if not complete:
+                # Unknown ancestry can split a formerly grouped storage device. Do
+                # not publish that as a new physical device or tear down watches.
+                for key, dev in list(snapshot.items()):
+                    if key not in old and any(key in d.get('inspection', {}).get('storageDeviceIds', []) for d in old.values()):
+                        del snapshot[key]
+                snapshot = {**old, **snapshot}
+            for dev in snapshot.values():
+                dev.setdefault('observationSource', self.backend.name)
+                if self.history and (complete or dev is not old.get(dev['device_id'])):
+                    try:
+                        self.history.observe(dev)
+                    except Exception as exc:
+                        self.last_error = f'USB observation persistence failed: {exc}'
+                        log.exception('USB observation persistence failed; retaining previous state')
+                        return
             self.current = snapshot
             first = self._first
             self._first = False

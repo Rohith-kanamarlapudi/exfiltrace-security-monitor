@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { normalizeList, normalizeObject } from './normalize.js'
+import { normalizeList, normalizeObject, normalizeUsbDevices } from './normalize.js'
 import { get, getUsbDevices } from './api.js'
 
 test('USB wrapper retains dynamic multi-volume mapping without fictional capabilities', () => {
@@ -14,6 +14,27 @@ test('USB wrapper retains dynamic multi-volume mapping without fictional capabil
   assert.equal(result.items[0].sizeBytes, 42)
   for (const field of ['fingerprint', 'status', 'session', 'connectedAt']) assert.equal(field in result.items[0], false)
   assert.deepEqual(result.items[1].mounts, [])
+})
+
+test('USB inspection retains physical identity, metadata hash, partial status and observation history', () => {
+  const result = normalizeUsbDevices({ source: 'live', total: 1, data: [{ device_id: 'USB\\PHYSICAL',
+    mounts: [], serial_number: null, observationSource: 'windows', fingerprint: null,
+    inspection: { completeness: 'partial', interfaces: [{ instanceId: 'HID\\CHILD', pnpClass: 'Mouse', usbDescriptorClass: null }], diagnostics: ['Query failed'] },
+    observation: { currentFingerprint: 'retained-hash', fingerprintRetained: true, firstSeen: '2026-10-12T00:00:00Z',
+      history: [{ sha256: 'retained-hash', changes: [{ field: 'manufacturer', before: 'A', after: 'B' }] }] },
+  }] })
+  const [device] = result.items
+  assert.equal(device.id, 'USB\\PHYSICAL')
+  assert.equal(device.inspection.interfaces[0].pnpClass, 'Mouse')
+  assert.equal(device.inspection.interfaces[0].usbDescriptorClass, null)
+  assert.equal(device.observation.fingerprintRetained, true)
+  assert.equal(device.observation.history[0].changes[0].field, 'manufacturer')
+  assert.equal(device.observationSource, 'windows')
+  assert.equal(device.fingerprint, null)
+  const [legacy] = normalizeUsbDevices({ source: 'live', total: 1, data: [{ device_id: 'OLD' }] }).items
+  assert.deepEqual(legacy.mounts, [])
+  assert.equal(legacy.inspection, null)
+  assert.equal(legacy.observationSource, 'unknown')
 })
 
 test('file actions, sensitivity, rename paths and removable association retain backend meaning', () => {

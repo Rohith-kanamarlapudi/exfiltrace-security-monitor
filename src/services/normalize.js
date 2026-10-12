@@ -22,3 +22,10 @@ export function normalizeList(payload) {
     return { ...item, id: item.id ?? item.deviceId }
   }), total: payload.total, limit: payload.limit ?? payload.data.length }
 }
+
+export function normalizeUsbDevices(payload) {
+  const result = normalizeList(payload)
+  return { ...result, items: result.items.map((d) => ({ ...d, mounts: d.mounts || [],
+    inspection: d.inspection || null, fingerprint: d.fingerprint || null, observation: d.observation || null,
+    observationSource: d.observationSource || 'unknown' })) }
+}

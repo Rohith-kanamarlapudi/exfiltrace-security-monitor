@@ -3,6 +3,7 @@ import { Usb } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import Panel from '../components/Panel'
 import USBTable from '../components/USBTable'
+import USBInspection from '../components/USBInspection'
 import DataTable from '../components/DataTable'
 import AlertsPanel from '../components/AlertsPanel'
 import LiveState from '../components/LiveState'
@@ -24,14 +25,15 @@ export default function USBForensics() {
   const [selectedId, setSelectedId] = useState(null)
   const selected = devices.data?.items.find((d) => d.id === selectedId) ?? devices.data?.items[0]
   return <>
-    <PageHeader title="USB Forensics" subtitle="Live USB storage devices and recorded connection history" />
+    <PageHeader title="USB Forensics" subtitle="Live physical USB devices, PnP interfaces and metadata fingerprint history" />
     <LiveState resource={status} label="monitor status" />
     <MonitorHealth status={status.data} />
-    <p className="mb-4 text-sm text-ink-dim">Fingerprinting, HID / BadUSB detection, write-protection status and session IDs: Unavailable. Connection alone does not establish malicious activity.</p>
-    <Panel title="Connected USB storage" icon={Usb} className="mb-4" bodyClassName="p-3">
+    <p className="mb-4 text-sm text-ink-dim">Interface inspection includes storage, HID, keyboards and mice. BadUSB verdicts, write protection and session IDs remain unavailable. Connection alone does not establish malicious activity.</p>
+    <Panel title="Connected physical USB devices" icon={Usb} className="mb-4" bodyClassName="p-3">
       <LiveState resource={devices} label="USB devices" />
       {devices.data && <USBTable devices={devices.data.items} onSelect={(d) => setSelectedId(d.id)} selectedId={selected?.id} />}
       {selected && <p className="mt-3 break-all font-mono text-xs text-ink-dim">Device ID: {selected.deviceId} · Volume label: {selected.volumeLabel || 'Unavailable'}</p>}
+      {selected && <USBInspection device={selected} />}
     </Panel>
     <Panel title="Recorded USB insertion / removal / mount history" className="mb-4" bodyClassName="p-3">
       <LiveState resource={history} label="USB history" />

@@ -115,6 +115,12 @@ def usb_devices():
     return jsonify({"data": devices, "total": len(devices), "source": "live"})
 
 
+@bp.get('/usb/observations')
+def usb_observations():
+    rows = svc().usb.history.records()
+    return jsonify({'data': rows, 'total': len(rows), 'source': 'live'})
+
+
 @bp.get("/alerts")
 def alerts():
     limit, offset = _int("limit", 200, 1, 1000), _int("offset", 0, 0, 10**9)

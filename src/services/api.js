@@ -1,5 +1,5 @@
 ﻿import { mockNetworkEvents, mockNetworkStats, mockTrafficSeries, mockIncidents, mockReports } from '../data/mockData.js'
-import { normalizeList, normalizeObject } from './normalize.js'
+import { normalizeList, normalizeObject, normalizeUsbDevices } from './normalize.js'
 
 // Direct requests; Flask enables CORS. VITE_API_URL includes /api.
 export const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://127.0.0.1:5000/api').replace(/\/$/, '')
@@ -15,7 +15,7 @@ export async function get(path, { signal } = {}) {
 }
 const list = (path) => async (options) => normalizeList(await get(path, options))
 export const getSystemStatus = async (options) => normalizeObject(await get(ENDPOINTS.status, options))
-export const getUsbDevices = list(ENDPOINTS.usbDevices)
+export const getUsbDevices = async (options) => normalizeUsbDevices(await get(ENDPOINTS.usbDevices, options))
 export const getUsbEvents = list(`${ENDPOINTS.usbEvents}?limit=200`)
 export const getFileEvents = list(`${ENDPOINTS.fileEvents}?limit=200`)
 export const getSensitiveFiles = list(`${ENDPOINTS.sensitiveFiles}?limit=100`)

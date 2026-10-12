@@ -187,7 +187,7 @@ class Database:
 
     # ---------- usb events ----------
     def add_usb_event(self, **v):
-        v.setdefault("timestamp", now_iso())
+        v.setdefault("timestamp", datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace('+00:00', 'Z'))
         return self._get("usb_events", self._insert("usb_events", v))
 
     def query_usb_events(self, event_type=None, search=None, limit=200, offset=0):
@@ -201,13 +201,13 @@ class Database:
         with self.connect() as conn:
             total = conn.execute(f"SELECT COUNT(*) FROM usb_events {clause}", args).fetchone()[0]
             rows = conn.execute(
-                f"SELECT * FROM usb_events {clause} ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?",
+                f"SELECT * FROM usb_events {clause} ORDER BY julianday(timestamp) DESC, id DESC LIMIT ? OFFSET ?",
                 args + [int(limit), int(offset)]).fetchall()
         return [self._row(r) for r in rows], total
 
     def usb_events_since(self, since_iso):
         with self.connect() as conn:
-            rows = conn.execute("SELECT * FROM usb_events WHERE timestamp >= ? ORDER BY timestamp ASC, id ASC",
+            rows = conn.execute("SELECT * FROM usb_events WHERE julianday(timestamp) >= julianday(?) ORDER BY julianday(timestamp) ASC, id ASC",
                                 (since_iso,)).fetchall()
         return [self._row(r) for r in rows]
 

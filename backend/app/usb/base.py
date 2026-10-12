@@ -14,7 +14,7 @@ class UsbBackend:
     name = "base"
 
     def snapshot(self):
-        """Return the list of USB mass-storage devices currently attached."""
+        """Return current physical USB devices (including non-storage functions)."""
         raise NotImplementedError
 
 
@@ -22,6 +22,7 @@ def normalize_device(raw):
     """Fill in missing keys so every consumer gets the same shape."""
     mounts = raw.get("mounts") or []
     return {
+        **{k: raw[k] for k in ('inspection', 'fingerprint', 'observation', 'observationSource') if k in raw},
         "device_id": str(raw["device_id"]),
         "name": raw.get("name") or "Unknown USB device",
         "vendor_id": (raw.get("vendor_id") or None) and str(raw["vendor_id"]).upper(),

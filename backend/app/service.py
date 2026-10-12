@@ -12,6 +12,7 @@ from .detection import DetectionEngine
 from .file_monitor import FileMonitor
 from .usb import create_backend
 from .usb.monitor import UsbMonitor
+from .usb.history import UsbHistory
 
 log = logging.getLogger("exfiltrace.service")
 
@@ -25,7 +26,7 @@ class MonitoringService:
         self.usb = UsbMonitor(
             backend, interval=float(self.config["usb"].get("poll_interval_seconds", 3)),
             on_insert=self._on_usb_insert, on_remove=self._on_usb_remove,
-            on_mounts_changed=self._on_usb_mounts_changed)
+            on_mounts_changed=self._on_usb_mounts_changed, history=UsbHistory(self.db))
         self.files = FileMonitor(self.config, self.db, volume_resolver=self.usb.volume_for,
                                  on_event=self._on_file_event)
         self.detector = DetectionEngine(self.config, self.db, self.usb)
@@ -98,8 +99,12 @@ class MonitoringService:
 
     def _on_usb_remove(self, dev):
         self._usb_event("REMOVED", dev)
+        current_mounts = {m for d in self.usb.devices() for m in d['mounts']}
         for mount in dev["mounts"]:
-            self.files.remove_watch(mount)
+            # A partial storage fallback may resolve into its physical USB root.
+            # Keep the watch if the new identity still owns this mounted volume.
+            if mount not in current_mounts:
+                self.files.remove_watch(mount)
 
     def _on_usb_mounts_changed(self, dev, old, new):
         self._usb_event("MOUNT_CHANGED", dev, {"previous_mounts": old, "new_mounts": new})

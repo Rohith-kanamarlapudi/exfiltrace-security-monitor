@@ -69,7 +69,7 @@ genuinely needs OS-specific APIs (the USB and Windows-forensics modules do).
 
 | Part | Synopsis module | Branch | Folder | Status | Depends on |
 |------|-----------------|--------|--------|--------|------------|
-| 1. USB Forensics + BadUSB Detection | Module 3: USB Forensics & Evidence Protection | `feature/usb` (suggested) | `backend/app/usb/` (actual) | storage monitoring implemented; full forensics pending | — |
+| 1. USB Forensics + BadUSB Detection | Module 3: USB Forensics & Evidence Protection | `feature/usb` (suggested) | `backend/app/usb/` (actual) | storage + PnP interfaces + metadata fingerprint history implemented; BadUSB pending | — |
 | 2. File Monitoring + USB Data-Theft Detection | Module 6: Windows Forensics (File Monitoring) | `feature/files` (suggested) | `backend/app/` (actual) | monitoring and live frontend implemented | USB device/volume association |
 | 3. Network Monitoring + Anomaly Detection | Module 7: Traffic Analysis | `feature/np` | `backend/network/` | **done (v0.1.0)** | — |
 | 4. Correlation Engine + Backend Integration + Reports | Correlation + Backend + Reports (XML) | `feature/correlation` (suggested) | `backend/app/` (file/USB service) | file/USB integrated; network and reports pending | parts 1, 2, 3 |
@@ -210,17 +210,28 @@ python -m pytest backend/network/tests -q     # 24 tests
 
 ### USB module (part 1) — suggested `backend/usb/`
 
-**Current implementation:** USB storage enumeration lives in `backend/app/usb/`;
-USB regression tests live in `backend/tests/test_usb.py`. The integrated service
-uses the existing device fields (`device_id`, `mounts`, etc.), and API responses
-wrap them in `data`; the table below remains the proposed frontend contract.
-Windows maps disk → partitions → logical drives using `Get-CimAssociatedInstance`
-with `Win32_DiskDriveToDiskPartition` and `Win32_LogicalDiskToPartition`.
-All mounted drive roots are passed to the file-monitor callbacks; disks without
-mounted volumes remain connected with an empty `mounts` list. Poll failures are
-reported as `data.usb_monitor.last_error` in `/api/status`, retain the previous
-snapshot, and clear after a successful poll. Empty or invalid PowerShell output
-is an error; a valid empty disk list means no USB storage is connected.
+**Current implementation:** `backend/app/usb/` supports live storage mapping and
+read-only native SetupAPI/Configuration Manager PnP inspection of physical USB
+roots and their USB/HID/storage functions. Parent ancestry groups composite
+interfaces; VID/PID, serial similarity and shared sentinel containers never merge
+unrelated devices. Detailed properties are cached until inventory changes or a
+60-second refresh; storage mounts update each poll. See `backend/app/usb/README.md`
+for identity rules, canonical `windows-pnp-metadata-v1` SHA-256 definition,
+limitations, tests and Windows website verification steps.
+
+The existing wrapped `/api/usb/devices` fields are preserved, with camelCase
+`observationSource`, `inspection`, `fingerprint` and `observation` additions.
+`inspection` includes relationships, interfaces/Windows PnP classes/IDs/functions,
+collection completeness, diagnostics and collectedAt. Descriptor fields are null.
+`observation` exposes UTC-Z firstSeen/lastSeen, newlyObserved (new in this monitoring
+run), current/previous hash and change history. SQLite tables `usb_observations`
+and `usb_fingerprint_history` are additive; no duplicate history per poll.
+`GET /api/usb/observations` reads persisted identities/characteristics even offline.
+Partial queries defer removals and fingerprint comparisons; failures retain the
+last snapshot and expose `usb_monitor.last_error`. Mount watches and existing
+file-copy detection remain integrated. Metadata hashes are not descriptor hashes
+or authentication. First-seen/changed/composite status is not a BadUSB verdict.
+BadUSB detection and software write protection remain unavailable.
 
 | Endpoint | `api.js` key | Shape (from `mockUsbDevices`) |
 |----------|--------------|-------------------------------|
@@ -297,15 +308,16 @@ shape. *Suggestion — confirm and record the real name here later.*
 - [ ] Fix/explain the 96-byte DNS packet to the exfil IP being flagged HIGH.
 - [ ] Wire capture start/stop to USB session start/stop (depends on **part 1**).
 
-### B. USB module (part 1 — storage monitoring implemented)
+### B. USB module (part 1 - interface inspection and metadata fingerprints implemented)
 - [x] Windows CIM USB storage enumeration and disk/partition/drive-letter mapping.
 - [x] Startup, insertion, removal and mount-change callbacks into file monitoring.
 - [x] Existing `/api/usb/devices` and `/api/status` routes in the integrated backend (current shapes preserved).
 - [x] Regression coverage for multiple mounted volumes, unmounted disks, poll failures and recovery.
-- [ ] Enumerate devices (WMI + Registry), record VID/PID/serial + connect/disconnect times.
-- [ ] Fingerprint devices and flag BadUSB/impersonation.
+- [x] Enumerate physical USB/PnP functions with identifiers, ancestry, available serials and connection observations.
+- [x] Versioned metadata SHA-256 fingerprints, SQLite observations/history, completeness and webpage integration.
+- [ ] BadUSB/impersonation detection (metadata changes alone are not verdicts).
 - [ ] Software write-blocking for evidence protection.
-- [ ] `GET /api/usb/devices` (+ `/api/status`) matching the mock shape.
+- [x] Additive real inspection API fields and frontend normalization; unsupported mock capabilities remain unavailable.
 - [ ] Plain-Python USB-session accessor for the correlation engine.
 - [ ] Physical unplug/replug and multi-partition Windows hardware verification (automated coverage exists).
 

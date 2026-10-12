@@ -20,12 +20,12 @@ export default function Dashboard() {
     <MonitorHealth status={status.data} />
     <LiveState resource={stats} label="file statistics" />
     <div className="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <StatCard label="Connected USB storage" value={usb.data?.total ?? 'Unavailable'} sub="last successful device snapshot" icon={Usb} />
+      <StatCard label="Connected USB devices" value={usb.data?.total ?? 'Unavailable'} sub="last successful device snapshot" icon={Usb} />
       <StatCard label="Recorded file events" value={stats.data?.totalEvents ?? 'Unavailable'} sub="stored event history, not a filesystem inventory" icon={FileSearch} />
       <StatCard label="Observed sensitive paths" value={stats.data?.sensitiveFiles ?? 'Unavailable'} sub="distinct paths recorded as sensitive" icon={FileSearch} />
       <StatCard label="Recorded alerts" value={alerts.data?.total ?? 'Unavailable'} sub="file / USB alerts; not a count of proven thefts" icon={AlertTriangle} />
     </div>
-    <Panel title="Connected USB storage" className="mb-4" bodyClassName="p-3" action={<Link to="/usb" className="text-xs text-accent">Device history</Link>}>
+    <Panel title="Connected USB devices" className="mb-4" bodyClassName="p-3" action={<Link to="/usb" className="text-xs text-accent">Device history</Link>}>
       <LiveState resource={usb} label="USB devices" />
       {usb.data && <USBTable devices={usb.data.items} />}
     </Panel>
