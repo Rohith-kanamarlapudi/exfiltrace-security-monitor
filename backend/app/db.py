@@ -57,14 +57,23 @@ CREATE TABLE IF NOT EXISTS alerts (
     dedupe_key TEXT UNIQUE
 );
 CREATE INDEX IF NOT EXISTS idx_alert_ts ON alerts(timestamp);
+
+CREATE TABLE IF NOT EXISTS usb_transfers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL, file_event_id INTEGER NOT NULL UNIQUE,
+    usb_device_id TEXT NOT NULL, usb_event_id INTEGER NOT NULL,
+    source_path TEXT NOT NULL, destination_path TEXT NOT NULL, destination_key TEXT NOT NULL,
+    sha256 TEXT NOT NULL, size_bytes INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_transfer_window ON usb_transfers(usb_device_id, usb_event_id, timestamp);
 """
 
 _JSON_COLUMNS = {"details", "mounts", "evidence", "file_event_ids", "usb_event_ids"}
 
 
 def now_iso():
-    """Local wall-clock time, ISO 8601 with offset, second precision + millis."""
-    return datetime.now(timezone.utc).astimezone().isoformat(timespec="milliseconds")
+    """UTC ISO 8601 ending in Z; old offset-formatted rows remain readable."""
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace('+00:00', 'Z')
 
 
 class Database:
@@ -145,14 +154,14 @@ class Database:
             where.append("(path LIKE ? OR dest_path LIKE ? OR file_name LIKE ?)")
             like = f"%{search}%"; args += [like, like, like]
         if since:
-            where.append("timestamp >= ?"); args.append(since)
+            where.append("julianday(timestamp) >= julianday(?)"); args.append(since)
         if until:
-            where.append("timestamp <= ?"); args.append(until)
+            where.append("julianday(timestamp) <= julianday(?)"); args.append(until)
         clause = ("WHERE " + " AND ".join(where)) if where else ""
         with self.connect() as conn:
             total = conn.execute(f"SELECT COUNT(*) FROM file_events {clause}", args).fetchone()[0]
             rows = conn.execute(
-                f"SELECT * FROM file_events {clause} ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?",
+                f"SELECT * FROM file_events {clause} ORDER BY julianday(timestamp) DESC, id DESC LIMIT ? OFFSET ?",
                 args + [int(limit), int(offset)],
             ).fetchall()
         return [self._row(r) for r in rows], total
@@ -178,12 +187,33 @@ class Database:
         return [self._row(r) for r in rows]
 
     def recent_file_events(self, since_iso, sensitive_only=False):
-        sql = "SELECT * FROM file_events WHERE timestamp >= ?"
+        sql = "SELECT * FROM file_events WHERE julianday(timestamp) >= julianday(?)"
         if sensitive_only:
             sql += " AND sensitive = 1"
         with self.connect() as conn:
-            rows = conn.execute(sql + " ORDER BY timestamp ASC, id ASC", (since_iso,)).fetchall()
+            rows = conn.execute(sql + " ORDER BY julianday(timestamp) ASC, id ASC", (since_iso,)).fetchall()
         return [self._row(r) for r in rows]
+
+    def record_usb_transfer(self, event, source, digest, size, session, window):
+        """Persist matches; count distinct destination files in a device/session window."""
+        timestamp = datetime.now(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+        destination = event['dest_path'] or event['path']
+        key = os.path.normcase(os.path.abspath(destination))
+        scope = (event['usb_device_id'], session, timestamp, window)
+        with self.connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            previous = conn.execute('''SELECT * FROM usb_transfers WHERE usb_device_id=? AND usb_event_id=?
+                AND julianday(timestamp) >= julianday(?) - ?/86400.0 AND destination_key=? AND sha256=?
+                ORDER BY id DESC LIMIT 1''', scope + (key, digest)).fetchone()
+            created = False
+            if previous is None:
+                cur = conn.execute('''INSERT OR IGNORE INTO usb_transfers
+                    (timestamp,file_event_id,usb_device_id,usb_event_id,source_path,destination_path,destination_key,sha256,size_bytes)
+                    VALUES (?,?,?,?,?,?,?,?,?)''', (timestamp, event['id'], event['usb_device_id'], session, source, destination, key, digest, size))
+                created = cur.rowcount == 1
+            rows = conn.execute('''SELECT * FROM usb_transfers WHERE usb_device_id=? AND usb_event_id=?
+                AND julianday(timestamp) >= julianday(?) - ?/86400.0 ORDER BY id''', scope).fetchall()
+        return created, [dict(r) for r in rows]
 
     # ---------- usb events ----------
     def add_usb_event(self, **v):
@@ -211,11 +241,12 @@ class Database:
                                 (since_iso,)).fetchall()
         return [self._row(r) for r in rows]
 
-    def last_insert_event(self, device_id):
+    def last_insert_event(self, device_id, at_time=None):
         with self.connect() as conn:
             row = conn.execute(
-                "SELECT * FROM usb_events WHERE device_id = ? AND event_type = 'INSERTED' ORDER BY id DESC LIMIT 1",
-                (device_id,)).fetchone()
+                "SELECT * FROM usb_events WHERE device_id = ? AND event_type = 'INSERTED' " +
+                ("AND julianday(timestamp) <= julianday(?) " if at_time else '') + "ORDER BY id DESC LIMIT 1",
+                (device_id, at_time) if at_time else (device_id,)).fetchone()
         return self._row(row) if row else None
 
     # ---------- alerts ----------
@@ -237,7 +268,7 @@ class Database:
         with self.connect() as conn:
             total = conn.execute(f"SELECT COUNT(*) FROM alerts {clause}", args).fetchone()[0]
             rows = conn.execute(
-                f"SELECT * FROM alerts {clause} ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?",
+                f"SELECT * FROM alerts {clause} ORDER BY julianday(timestamp) DESC, id DESC LIMIT ? OFFSET ?",
                 args + [int(limit), int(offset)]).fetchall()
         return [self._row(r) for r in rows], total
 

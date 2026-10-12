@@ -1,5 +1,8 @@
 {
-  "monitored_directories": ["C:/ExfilTraceTest"],
+  "monitored_directories": [
+    "C:\\ExfilTraceTest",
+    "C:\\ExfilTraceTest2"
+  ],
   "database_path": "data/exfiltrace.db",
   "sensitive_rules": {
     "extensions": [

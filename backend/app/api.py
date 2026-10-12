@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 from flask import Blueprint, Flask, jsonify, request
 
 from .config import Config, ConfigError
-from .service import MonitoringService
+from .service import MonitoringService, DirectoryError
 
 log = logging.getLogger("exfiltrace.api")
 bp = Blueprint("api", __name__, url_prefix="/api")
@@ -184,17 +184,27 @@ def get_config():
     return jsonify({"data": svc().config.public_dict(), "source": "live"})
 
 
+@bp.get('/config/directories')
+def directories_status():
+    return jsonify({'data': svc().directory_status(), 'source': 'live'})
+
+
 @bp.post("/config/directories")
 def config_directories():
     body = request.get_json(silent=True) or {}
+    if not isinstance(body, dict):
+        raise BadRequest('Expected a JSON object.')
     action, path = body.get("action"), body.get("path")
-    if action not in ("add", "remove") or not isinstance(path, str) or not path.strip():
-        raise BadRequest("Body must be {\"action\": \"add\"|\"remove\", \"path\": \"<folder>\"}")
+    if action not in ('add', 'remove', 'edit') or not isinstance(path, str) or not path.strip():
+        raise BadRequest('Expected action add, remove or edit and a full folder path.')
     try:
-        dirs = svc().add_directory(path) if action == "add" else svc().remove_directory(path)
-    except ValueError as exc:
-        raise BadRequest(str(exc))
-    return jsonify({"data": {"monitored_directories": dirs}, "source": "live"})
+        if action == 'edit':
+            dirs = svc().edit_directory(body.get('previousPath'), path)
+        else:
+            dirs = svc().add_directory(path) if action == 'add' else svc().remove_directory(path)
+    except DirectoryError as exc:
+        return jsonify({'error': str(exc)}), exc.status
+    return jsonify({'data': {'monitored_directories': dirs, **svc().directory_status()}, 'source': 'live'})
 
 
 def create_app(config=None, service=None, autostart=True):

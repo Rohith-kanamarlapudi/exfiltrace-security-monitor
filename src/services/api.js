@@ -31,6 +31,14 @@ export const getUsbEvents = list(`${ENDPOINTS.usbEvents}?limit=200`)
 export const getFileEvents = list(`${ENDPOINTS.fileEvents}?limit=200`)
 export const getSensitiveFiles = list(`${ENDPOINTS.sensitiveFiles}?limit=100`)
 export const getFileStats = async (options) => normalizeObject(await get(ENDPOINTS.fileStats, options))
+export const getMonitoredFolders = async (options) => normalizeObject(await get('/config/directories', options))
+export async function changeMonitoredFolder(action, path, previousPath) {
+  const response = await fetch(`${API_BASE_URL}/config/directories`, { method: 'POST', cache: 'no-store',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, path, ...(previousPath ? { previousPath } : {}) }) })
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload.error || `Folder update: HTTP ${response.status}`)
+  return normalizeObject(payload)
+}
 export const getAlerts = list(`${ENDPOINTS.alerts}?limit=200`)
 // Explicit preview pages only; never a fallback for failed live requests.
 export const getNetworkEvents = async () => mockNetworkEvents

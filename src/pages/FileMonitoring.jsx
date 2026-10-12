@@ -7,6 +7,7 @@ import FileActivityTable from '../components/FileActivityTable'
 import AlertsPanel from '../components/AlertsPanel'
 import LiveState from '../components/LiveState'
 import MonitorHealth from '../components/MonitorHealth'
+import MonitoredFolders from '../components/MonitoredFolders'
 import { useApi } from '../hooks'
 import { getFileEvents, getFileStats, getSensitiveFiles, getAlerts, getSystemStatus } from '../services/api'
 const ACTIONS = ['ALL', 'CREATED', 'MODIFIED', 'DELETED', 'RENAMED']
@@ -19,6 +20,7 @@ export default function FileMonitoring() {
     <PageHeader title="File Monitoring" subtitle="Live activity in watched directories and removable volumes" />
     <LiveState resource={status} label="monitor status" />
     <MonitorHealth status={status.data} />
+    <MonitoredFolders />
     <LiveState resource={stats} label="file statistics" />
     <div className="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <StatCard label="Recorded events" value={stats.data?.totalEvents ?? 'Unavailable'} sub="stored history" icon={FileSearch} />

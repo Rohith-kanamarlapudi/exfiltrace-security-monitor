@@ -70,7 +70,7 @@ genuinely needs OS-specific APIs (the USB and Windows-forensics modules do).
 | Part | Synopsis module | Branch | Folder | Status | Depends on |
 |------|-----------------|--------|--------|--------|------------|
 | 1. USB Forensics + BadUSB Detection | Module 3: USB Forensics & Evidence Protection | `feature/usb` (suggested) | `backend/app/usb/` (actual) | storage + PnP interfaces + metadata fingerprint history + isolated BadUSB simulation implemented; physical verdicts pending | — |
-| 2. File Monitoring + USB Data-Theft Detection | Module 6: Windows Forensics (File Monitoring) | `feature/files` (suggested) | `backend/app/` (actual) | monitoring and live frontend implemented | USB device/volume association |
+| 2. File Monitoring + USB Data-Theft Detection | Module 6: Windows Forensics (File Monitoring) | `feature/files` (suggested) | `backend/app/` (actual) | live folder management and all-file USB transfer alerts implemented | USB device/volume association |
 | 3. Network Monitoring + Anomaly Detection | Module 7: Traffic Analysis | `feature/np` | `backend/network/` | **done (v0.1.0)** | — |
 | 4. Correlation Engine + Backend Integration + Reports | Correlation + Backend + Reports (XML) | `feature/correlation` (suggested) | `backend/app/` (file/USB service) | file/USB integrated; network and reports pending | parts 1, 2, 3 |
 
@@ -267,6 +267,25 @@ suggestion — agree it with the team and add it here once real.*
 
 ### File module (part 2) — suggested `backend/files/`
 
+
+**Live folder management:** File Monitoring uses GET/POST
+`/api/config/directories` for user folder status, add/remove and transactional edit
+(`previousPath`, `path`). Full existing absolute directory paths are normalized;
+duplicates are rejected. The replacement must be watched and configuration saved
+before the original is unwatched. Watch/save failures roll back, files are never
+deleted, and automatic USB watches stay separate. Config changes persist atomically
+and take effect immediately while running.
+
+**All-file USB copies:** Filename/sensitivity no longer gates verified copy alerts.
+Size/SHA-256 matching searches eligible files in currently configured source folders,
+including renamed copies. `MONITORED_FILE_COPIED_TO_USB` alerts are MEDIUM until
+more than 3 distinct destination files or more than 5,000,000 bytes are matched
+within a per-connection 120-second window, then CRITICAL. New `detection` settings
+`usb_transfer_file_limit`, `usb_transfer_size_limit_bytes`, and
+`usb_transfer_window_seconds` control this policy. Additive SQLite `usb_transfers`
+records preserve window evidence across service restarts and deduplicate watcher
+notifications. Historical alerts are unchanged. See README for limitations and tests.
+
 | Endpoint | `api.js` key | Shape (from `mockData.js`) |
 |----------|--------------|----------------------------|
 | `GET /api/files/events` | `fileEvents` | array of `{ id ('f-01'), timestamp, fileName, path, action (CREATE\|MODIFY\|ACCESS\|COPY\|DELETE\|MOVE), process, usbSession (string\|null), risk (LOW\|MEDIUM\|HIGH), sensitive: bool }` |
@@ -342,6 +361,8 @@ shape. *Suggestion — confirm and record the real name here later.*
 
 ### C. File module (part 2 — file/USB monitoring implemented in `backend/app/`)
 - [x] `watchdog` monitoring over configured directories and discovered USB volumes.
+- [x] Live Monitored Folders CRUD/status, replacement-before-removal and atomic configuration persistence.
+- [x] All-file monitored-source copy alerts with per-USB count/5 MB severity thresholds and persistent evidence.
 - [x] Existing file event, sensitive-path and statistics endpoints connected to the frontend through response normalization.
 - [x] Content-matching file/USB alerts with explanations, evidence and verdicts displayed live.
 - [x] File event values preserved: CREATED, MODIFIED, DELETED and RENAMED.

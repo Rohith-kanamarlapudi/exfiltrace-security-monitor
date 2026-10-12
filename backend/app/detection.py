@@ -4,7 +4,7 @@ Verdicts
 --------
 SUSPICIOUS         Activity that matches a risky pattern but does not prove a transfer.
 VERIFIED_TRANSFER  A file created on a USB volume is byte-identical (SHA-256) to a monitored
-                   sensitive file. This proves a COPY exists on the device. It does not prove who made
+                   file. This proves a COPY exists on the device. It does not prove who made
                    it, that it was unauthorised, or that data left the device afterwards.
 
 Plain "a USB device was connected" is never an alert by itself.
@@ -13,7 +13,8 @@ import hashlib
 import logging
 import os
 import time
-from datetime import datetime, timedelta
+import threading
+from datetime import datetime, timedelta, timezone
 
 from .file_monitor import CREATED, DELETED, MODIFIED, RENAMED, FileClassifier
 
@@ -43,6 +44,9 @@ class DetectionEngine:
         self.config, self.db, self.usb = config, db, usb_state
         self.cfg = config["detection"]
         self.classifier = FileClassifier(config)
+        self._transfer_lock = threading.RLock()
+        self._hash_cache = {}
+        self._verified_events = set()
 
     # ------------------------------------------------------------ entry points
     def on_file_event(self, fe):
@@ -52,10 +56,12 @@ class DetectionEngine:
             eff = fe["dest_path"] or fe["path"]
             if fe["on_removable"]:
                 if fe["event_type"] in (CREATED, RENAMED, MODIFIED):
-                    alerts += self._removable_write(fe, eff)
+                    with self._transfer_lock:
+                        alerts += self._removable_write(fe, eff)
                 if fe["event_type"] in (CREATED, RENAMED):
-                    alerts += self._bulk_copy(fe)
-                    alerts += self._archive(fe, eff)
+                    if fe['id'] not in self._verified_events:
+                        alerts += self._bulk_copy(fe)
+                        alerts += self._archive(fe, eff)
             elif fe["sensitive"]:
                 if fe["event_type"] == DELETED:
                     alerts += self._moved_to_usb(fe)
@@ -68,7 +74,7 @@ class DetectionEngine:
     def _device(self, fe):
         dev_id = fe.get("usb_device_id")
         dev = next((d for d in self.usb.devices() if d["device_id"] == dev_id), None)
-        insert = self.db.last_insert_event(dev_id) if dev_id else None
+        insert = self.db.last_insert_event(dev_id, at_time=fe.get('timestamp')) if dev_id else None
         return dev, insert
 
     @staticmethod
@@ -80,7 +86,7 @@ class DetectionEngine:
         return f"{dev['name']} ({ids}, serial {serial})"
 
     def _since(self, seconds):
-        return (datetime.now().astimezone() - timedelta(seconds=seconds)).isoformat(timespec="milliseconds")
+        return (datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat(timespec="milliseconds").replace('+00:00', 'Z')
 
     def _alert(self, rule, severity, verdict, title, explanation, evidence, file_ids, usb_ids, key):
         return self.db.add_alert(rule=rule, severity=severity, verdict=verdict, title=title,
@@ -103,33 +109,53 @@ class DetectionEngine:
         return last
 
     def _find_sources(self, file_name, dest_path):
-        """Same-named files that could be the origin: recent sensitive events first, then a scan of monitored dirs."""
+        """Search eligible monitored sources by size/content, prioritizing matching names."""
         found, seen = [], set()
+        size = os.path.getsize(dest_path)
+        roots = [os.path.normcase(os.path.realpath(p)) for p in self.config.get('monitored_directories', [])]
 
         def add(path):
-            key = os.path.normcase(os.path.abspath(path))
-            if key in seen or key == os.path.normcase(os.path.abspath(dest_path)):
+            key = os.path.normcase(os.path.realpath(path))
+            if key in seen or key == os.path.normcase(os.path.realpath(dest_path)) or self.usb.volume_for(path):
                 return
-            if self.usb.volume_for(path):          # a file on the USB itself is not a source
+            if self.classifier.is_excluded(path) or not any(key.startswith(root.rstrip(os.sep) + os.sep) for root in roots):
                 return
-            if os.path.isfile(path):
-                seen.add(key)
-                found.append(path)
+            try:
+                if os.path.isfile(path) and (os.path.getsize(path) == size or os.path.basename(path).lower() == file_name.lower()):
+                    seen.add(key)
+                    found.append(path)
+            except OSError:
+                return  # a source can disappear during enumeration
 
-        for ev in reversed(self.db.recent_file_events(self._since(self.cfg["correlation_window_seconds"]), True)):
-            if not ev["on_removable"] and ev["file_name"].lower() == file_name.lower():
-                add(ev["dest_path"] or ev["path"])
+        for ev in reversed(self.db.recent_file_events(self._since(self.cfg['correlation_window_seconds']))):
+            if not ev['on_removable']:
+                add(ev['dest_path'] or ev['path'])
         scanned = 0
-        for root_dir in self.config.get("monitored_directories", []):
+        for root_dir in self.config.get('monitored_directories', []):
             for root, dirs, files in os.walk(root_dir):
                 dirs[:] = [d for d in dirs if d.lower() not in self.classifier.excluded_dirs]
-                for f in files:
+                for name in files:
                     scanned += 1
-                    if f.lower() == file_name.lower():
-                        add(os.path.join(root, f))
+                    if scanned > MAX_WALK_ENTRIES:
+                        break
+                    add(os.path.join(root, name))
                 if scanned > MAX_WALK_ENTRIES:
                     break
-        return found[:5]
+            if scanned > MAX_WALK_ENTRIES:
+                break
+        return sorted(found, key=lambda p: (os.path.basename(p).lower() != file_name.lower(), p))
+
+    def _source_hash(self, path, max_bytes):
+        try:
+            stat = os.stat(path)
+            key = (os.path.normcase(os.path.abspath(path)), stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+        except OSError:
+            return None
+        if key not in self._hash_cache:
+            if len(self._hash_cache) > 5000:
+                self._hash_cache.clear()
+            self._hash_cache[key] = sha256_of(path, max_bytes)
+        return self._hash_cache[key]
 
     # ------------------------------------------------------------ rules
     def _removable_write(self, fe, eff):
@@ -148,11 +174,12 @@ class DetectionEngine:
         sources = self._find_sources(fe["file_name"], eff)
         verified = unverified = None
         for src in sources:
-            src_hash = sha256_of(src, max_bytes)
+            src_hash = self._source_hash(src, max_bytes)
             if dest_hash and src_hash and dest_hash == src_hash:
                 verified = (src, src_hash)
                 break
-            unverified = unverified or src
+            if os.path.basename(src).lower() == fe['file_name'].lower():
+                unverified = unverified or src
 
         base_evidence = [
             f"USB device: {self._dev_text(dev)}",
@@ -164,31 +191,40 @@ class DetectionEngine:
 
         if verified:
             src, digest = verified
+            if len(self._verified_events) > 5000:
+                self._verified_events.clear()
+            self._verified_events.add(fe['id'])
             src_sensitive, src_reason = self.classifier.classify(src)
-            if not (dest_sensitive or src_sensitive):
+            created, transfers = self.db.record_usb_transfer(fe, src, digest, dest_size, insert['id'] if insert else 0,
+                int(self.cfg['usb_transfer_window_seconds']))
+            if not created:
                 return []
-            ev = base_evidence + [
-                f"Identical file in monitored location: {src}",
-                f"SHA-256 (source and USB copy): {digest}",
-            ] + ([f"Sensitive rule matched on source: {src_reason}"] if src_sensitive else [])
+            count = len({t['destination_key'] for t in transfers})
+            total_bytes = sum(t['size_bytes'] for t in transfers)
+            critical = count > int(self.cfg['usb_transfer_file_limit']) or total_bytes > int(self.cfg['usb_transfer_size_limit_bytes'])
+            severity = 'CRITICAL' if critical else 'MEDIUM'
+            evidence = base_evidence + [
+                f'Identical file in monitored location: {src}', f'SHA-256 (source and USB copy): {digest}',
+                f"Transfer window: {count} distinct files, {total_bytes} bytes in {self.cfg['usb_transfer_window_seconds']}s",
+                f"Critical only above {self.cfg['usb_transfer_file_limit']} files or {self.cfg['usb_transfer_size_limit_bytes']} bytes",
+            ] + ([f'Sensitive rule matched on source: {src_reason}'] if src_sensitive else [])
             return [self._alert(
-                "SENSITIVE_FILE_COPIED_TO_USB", "CRITICAL", VERIFIED,
-                f"Sensitive file copied to USB: {fe['file_name']}",
+                'MONITORED_FILE_COPIED_TO_USB', severity, VERIFIED,
+                f"Monitored file copied to USB: {fe['file_name']}",
                 f"'{fe['file_name']}' was created on removable volume {fe['volume']} while monitoring was active, "
-                f"and its SHA-256 hash is identical to the file at {src}. This verifies that a copy of the sensitive "
-                "file now exists on the USB device. It does not show who made the copy, whether it was authorised, "
-                "or that the data left the device afterwards.",
-                ev, [fe["id"]], usb_ids, f"verified:{os.path.normcase(eff)}:{digest}")]
+                f'and its SHA-256 hash is identical to the file at {src}. This verifies that a copy of the monitored '
+                'file now exists on the USB device. It does not show who made the copy, whether it was authorised, '
+                f'or that the data left the device afterwards. The {count}-file, {total_bytes}-byte transfer window determines severity.',
+                evidence, [fe['id']], usb_ids, f"transfer-event:{fe['id']}")]
 
-        src_sensitive = bool(unverified and self.classifier.classify(unverified)[0])
-        if unverified and (dest_sensitive or src_sensitive):
+        if unverified:
             if dest_hash is None:
                 note = "Content could not be compared (file too large or unreadable)."
             else:
                 note = "Content differs from the same-named file (may be an edited copy, or an unrelated file)."
             return [self._alert(
-                "SENSITIVE_NAME_MATCH_ON_USB", "HIGH", SUSPICIOUS,
-                f"Possible sensitive file copy to USB: {fe['file_name']}",
+                "MONITORED_NAME_MATCH_ON_USB", "CRITICAL" if dest_size > int(self.cfg["usb_transfer_size_limit_bytes"]) else "MEDIUM", SUSPICIOUS,
+                f"Possible monitored file copy to USB: {fe['file_name']}",
                 f"A file named '{fe['file_name']}' appeared on removable volume {fe['volume']} and a file with the same "
                 f"name exists in a monitored location ({unverified}). {note} This is suspicious but NOT a verified transfer.",
                 base_evidence + [f"Same-named file in monitored location: {unverified}", note],
@@ -207,18 +243,23 @@ class DetectionEngine:
 
     def _bulk_copy(self, fe):
         """Rule 2: many files written to a USB volume in a short time."""
-        window = int(self.cfg["bulk_window_seconds"])
-        threshold = int(self.cfg["bulk_file_threshold"])
+        window = int(self.cfg['usb_transfer_window_seconds'])
+        threshold = int(self.cfg["usb_transfer_file_limit"]) + 1
+        dev, insert = self._device(fe)
         events = [e for e in self.db.recent_file_events(self._since(window))
                   if e["on_removable"] and e["usb_device_id"] == fe["usb_device_id"]
                   and e["event_type"] in (CREATED, RENAMED)]
-        if len(events) < threshold:
+        if insert:
+            connected = datetime.fromisoformat(insert['timestamp'].replace('Z', '+00:00'))
+            events = [e for e in events if datetime.fromisoformat(e['timestamp'].replace('Z', '+00:00')) >= connected]
+        events = list({os.path.normcase(e['dest_path'] or e['path']): e for e in events}.values())
+        total_bytes = sum(e['size_bytes'] or 0 for e in events)
+        if len(events) < threshold and total_bytes <= int(self.cfg['usb_transfer_size_limit_bytes']):
             return []
-        dev, insert = self._device(fe)
         sensitive_count = sum(1 for e in events if e["sensitive"])
         key = f"bulk:{fe['usb_device_id']}:{insert['id'] if insert else 0}"
         return [self._alert(
-            "BULK_COPY_TO_USB", "HIGH" if sensitive_count else "MEDIUM", SUSPICIOUS,
+            "BULK_COPY_TO_USB", "CRITICAL", SUSPICIOUS,
             f"Bulk file copy to USB ({len(events)} files in {window}s)",
             f"{len(events)} files were created on {fe['volume']} within {window} seconds "
             f"({sensitive_count} matched sensitive-file rules). Bulk copying is a common data-theft pattern but can also be "

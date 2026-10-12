@@ -31,7 +31,7 @@ def test_full_pipeline_copy_to_usb_is_verified(config, db, backend, dirs):
         shutil.copy(src, dirs["usb"] / "confidential.txt")
         assert wait_for(lambda: client.get("/api/alerts?verdict=VERIFIED_TRANSFER").get_json()["total"] >= 1)
         alert = client.get("/api/alerts?verdict=VERIFIED_TRANSFER").get_json()["data"][0]
-        assert alert["severity"] == "CRITICAL"
+        assert alert["severity"] == "MEDIUM"
         ev = client.get("/api/files/events?removable=true").get_json()["data"]
         assert ev and ev[0]["usb_device_id"] == "STICK1"
 

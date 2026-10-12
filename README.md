@@ -49,7 +49,7 @@ at build time. Do not expose the development servers to a public network.
 (`{ data, source: "live", total? }`) and converts snake_case field names to
 camelCase without changing their meanings. Lists retain `items`, `total`, and
 `limit`; USB `device_id` also becomes the stable row ID. No mock fallback exists.
-The Flask response schema and configuration remain unchanged.
+Existing response wrappers are retained; folder management adds live status and safe persisted edits.
 
 Live endpoints: `/status`, `/usb/devices`, `/usb/events`, `/files/events`,
 `/files/sensitive`, `/files/stats`, and `/alerts` under the API base URL.
@@ -95,7 +95,7 @@ With the current configuration watching `C:/ExfilTraceTest`, create and modify
 one harmless test file. The unique name avoids overwriting previous test files:
 
 ```powershell
-$testSource = 'C:\ExfilTraceTest\confidential-ui-' + [guid]::NewGuid().ToString('N') + '.txt'
+$testSource = 'C:\ExfilTraceTest\ordinary-ui-' + [guid]::NewGuid().ToString('N') + '.txt'
 New-Item -ItemType Directory -Force C:\ExfilTraceTest
 Set-Content -LiteralPath $testSource -Value 'Harmless ExfilTrace integration test'
 Start-Sleep -Seconds 4
@@ -109,7 +109,7 @@ Copy-Item -LiteralPath $testSource -Destination $testMount
 ```
 
 In http://127.0.0.1:5173/files, confirm CREATED/MODIFIED activity and the
-`SENSITIVE_FILE_COPIED_TO_USB` alert with severity CRITICAL and verdict
+`MONITORED_FILE_COPIED_TO_USB` alert with severity MEDIUM for a small single file and verdict
 VERIFIED_TRANSFER. Expand its evidence. Allow a few seconds for hashing and
 polling. View http://127.0.0.1:5173/usb for connected devices and history.
 Stop the backend briefly to check that the website retains data and shows a
@@ -120,6 +120,74 @@ be checked directly:
 - http://127.0.0.1:5000/api/usb/devices
 - http://127.0.0.1:5000/api/files/events?removable=true
 - http://127.0.0.1:5000/api/alerts?verdict=VERIFIED_TRANSFER
+
+## Monitored Folders and USB copy policy
+
+Open **File Monitoring ? Monitored Folders**. Enter a full existing Windows path
+such as `C:\Work\Documents` (without enclosing quotes) and choose **Add folder**.
+Each configured row shows active/inactive status and its error. **Edit** starts the
+replacement watch and saves configuration before stopping the original; a failed
+watch or save keeps the old folder. **Remove monitoring** changes configuration
+and stops the watch without deleting folders or files. Automatically discovered
+USB watches appear separately with no user edit/remove controls.
+
+Folder changes use the existing `POST /api/config/directories`, extending its
+add/remove actions with `edit`, `path`, and `previousPath`. `GET` on that same
+endpoint provides folder/watch status and transfer policy. Existing POST
+`monitored_directories` responses remain available. Duplicate canonical paths
+return 409; invalid/relative/missing/file paths return 400; watch or save failures
+return 503 with an explanation. Paths are normalized with Windows case/alias
+handling. A stopped monitor can save additions, but cannot edit until started,
+since replacements must be watched successfully first.
+
+Configuration is atomically saved to the active `config.json` path and survives
+restart. Other settings are preserved. Add/edit/remove take effect while running
+without a restart; restart once to load updated code if an older backend process
+is still running.
+
+Every content-matched copy from a monitored folder to USB now produces a
+`MONITORED_FILE_COPIED_TO_USB` / `VERIFIED_TRANSFER` alert regardless of filename,
+extension or sensitivity. Renamed destination files can match by size and SHA-256.
+Sensitivity remains descriptive metadata, not an alert eligibility condition.
+Source candidates must still belong to currently monitored folders; existing
+exclusions apply. Unmatched or unhashable content is never called verified.
+
+New USB transfer alerts are **MEDIUM** until the current USB connection's rolling
+120-second window exceeds **3 distinct destination files** or **5 MB (5,000,000
+bytes)** of matched content. Exactly three files and exactly 5 MB remain medium;
+four files or 5,000,001 bytes are critical. Repeated notifications for the same
+path/content do not inflate counts. Changed content versions at the same target
+accumulate bytes while counting as one destination file. Thresholds are configurable
+under `detection` using `usb_transfer_file_limit`, `usb_transfer_size_limit_bytes`,
+and `usb_transfer_window_seconds`; these supersede the legacy bulk threshold for
+USB copy priority. Transfer evidence and window state persist in additive SQLite
+`usb_transfers` rows, isolated per USB identity and connection. Every alert reports
+its window count/bytes and thresholds. Earlier medium alerts retain the priority
+assigned when recorded; the copy that crosses a threshold is critical. Existing
+historical alerts retain their original severity and rule identifier.
+
+Content matching retains the configured hashing limit (256 MiB by default) and a
+50,000-entry source-search bound. Source hashes are cached until size or timestamps
+change. Same-name evidence with unavailable/different content remains SUSPICIOUS,
+not verified; source attribution cannot be guaranteed if originals disappear before
+inspection. Raw filesystem activity is still recorded independently of verification.
+
+To test:
+
+1. Create two harmless local folders and add the first through the page. Create a
+   file there and confirm active status and live recorded activity.
+2. Edit to the second. Confirm it becomes active and the first leaves the list.
+   Try a missing folder or duplicate path and confirm the original remains.
+3. Remove the second; verify its files still exist. Add it again and restart the
+   backend with the same configuration path; it should return active.
+4. Copy one or two ordinary files (no confidential name required) to a discovered
+   USB mount. On Dashboard, expand MEDIUM VERIFIED_TRANSFER alerts and inspect
+   hashes/source paths. Copy four distinct small files within 120 seconds, or copy
+   over 5 MB total, to see a CRITICAL alert at the threshold crossing. Wait more
+   than 120 seconds or reconnect before testing a fresh window.
+
+Validation for this change uses representative USB devices and actual temporary
+filesystem watches/copies. Physical-drive and browser UI checks were not performed.
 
 ## Validation
 

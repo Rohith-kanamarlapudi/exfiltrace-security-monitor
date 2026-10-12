@@ -3,6 +3,7 @@ import copy
 import json
 import os
 import threading
+import tempfile
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # backend/
 DEFAULT_CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
@@ -30,6 +31,9 @@ DEFAULTS = {
         "bulk_window_seconds": 120,
         "archive_extensions": [".zip", ".7z", ".rar", ".tar", ".gz"],
         "max_hash_bytes": 268435456,
+        "usb_transfer_file_limit": 3,
+        "usb_transfer_size_limit_bytes": 5000000,
+        "usb_transfer_window_seconds": 120,
     },
     "api": {"host": "127.0.0.1", "port": 5000},
 }
@@ -87,22 +91,30 @@ class Config:
     # --- monitored directory management (persisted to the config file) ---
     def set_directories(self, dirs):
         with self._lock:
-            self.data["monitored_directories"] = list(dirs)
-            self._save()
+            values = list(dirs)
+            self._save(values)
+            self.data["monitored_directories"] = values
 
-    def _save(self):
+    def _save(self, directories):
         if not self.path:
             return
         try:
             with open(self.path, "r", encoding="utf-8") as fh:
                 on_disk = json.load(fh)
-        except (OSError, json.JSONDecodeError):
+        except FileNotFoundError:
             on_disk = {}
-        on_disk["monitored_directories"] = self.data["monitored_directories"]
-        tmp = self.path + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as fh:
-            json.dump(on_disk, fh, indent=2)
-        os.replace(tmp, self.path)
+        if not isinstance(on_disk, dict):
+            raise ValueError('Configuration must contain a JSON object; existing file was not changed.')
+        on_disk["monitored_directories"] = directories
+        tmp = None
+        try:
+            with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=os.path.dirname(os.path.abspath(self.path)), delete=False) as fh:
+                tmp = fh.name
+                json.dump(on_disk, fh, indent=2)
+            os.replace(tmp, self.path)
+        finally:
+            if tmp and os.path.exists(tmp):
+                os.unlink(tmp)
 
     def public_dict(self):
         d = copy.deepcopy(self.data)

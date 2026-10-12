@@ -141,13 +141,19 @@ class FileMonitor:
     def remove_watch(self, path):
         key = os.path.normcase(os.path.abspath(path))
         with self._lock:
-            entry = self._watches.pop(key, None)
+            entry = self._watches.get(key)
             observer = self._observer
         if entry and entry.get("watch") and observer:
             try:
                 observer.unschedule(entry["watch"])                                  # outside our lock
             except Exception as exc:
+                entry['error'] = f'Could not stop watch: {exc}'
                 log.warning("Could not unschedule %s: %s", path, exc)
+                return False
+        with self._lock:
+            if self._watches.get(key) is entry:
+                self._watches.pop(key, None)
+        return True
 
     def watches(self):
         with self._lock:
