@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { getNetworkEvents, getNetworkStats, getTrafficSeries } from './api.js'
+import { getNetworkEvents, getNetworkStats, getTrafficSeries, getRecentNetworkEvents, getRecentTrafficSeries } from './api.js'
 import { normalizeNetworkEvents, normalizeNetworkStats, normalizeNetworkTraffic } from './normalize.js'
 
 const event = {
@@ -11,6 +11,37 @@ const event = {
 }
 const stats = { packetsCaptured: 42111, outboundBytes: 51500000, activeConnections: 12, suspiciousConnections: 1 }
 const traffic = [{ time: '14:00', outbound: 49.6, inbound: 4.8, suspicious: 48.2 }]
+
+test('last-hour fetchers filter on the server and advance their UTC window on every poll', async () => {
+  const originalFetch = globalThis.fetch
+  const originalNow = Date.now
+  const seen = []
+  let now = Date.parse('2026-11-03T00:30:00.999Z')
+  try {
+    Date.now = () => now
+    globalThis.fetch = async (url, options) => {
+      seen.push({ url: new URL(url), signal: options.signal })
+      return { ok: true, json: async () => [] }
+    }
+    const controller = new AbortController()
+    assert.deepEqual(await getRecentNetworkEvents({ signal: controller.signal }), [])
+    assert.deepEqual(await getRecentTrafficSeries(), [])
+    for (const request of seen) {
+      assert.equal(request.url.searchParams.get('start'), '2026-11-02T23:30:00Z')
+      assert.equal(request.url.searchParams.get('end'), '2026-11-03T00:30:00Z')
+    }
+    assert.equal(seen[0].url.pathname, '/api/network/events')
+    assert.equal(seen[1].url.pathname, '/api/network/traffic')
+    assert.equal(seen[0].signal, controller.signal)
+    now += 60_000
+    await getRecentNetworkEvents()
+    assert.equal(seen[2].url.searchParams.get('start'), '2026-11-02T23:31:00Z')
+    assert.equal(seen[2].url.searchParams.get('end'), '2026-11-03T00:31:00Z')
+  } finally {
+    globalThis.fetch = originalFetch
+    Date.now = originalNow
+  }
+})
 
 test('network fetchers use the live endpoints and accept bare response payloads', async () => {
   const original = globalThis.fetch

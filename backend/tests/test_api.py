@@ -76,6 +76,43 @@ def test_usb_alert_and_sensitive_endpoints(client):
     assert client.get("/api/files/sensitive").get_json()["total"] == 2
 
 
+def test_reports_correlate_usb_window_and_export_xml(client):
+    client.db.add_usb_event(event_type="INSERTED", timestamp="2026-11-03T10:00:00Z", device_id="R1",
+                            name="Report Stick", vendor_id="1234", product_id="5678", mounts=["/usb"], details={})
+    client.db.add_file_event(event_type="CREATED", timestamp="2026-11-03T10:02:00Z", path="/usb/secret.txt",
+                             file_name="secret.txt", sensitive=1, on_removable=1, volume="/usb",
+                             usb_device_id="R1", risk="HIGH", details={})
+    client.db.add_usb_event(event_type="REMOVED", timestamp="2026-11-03T10:05:00Z", device_id="R1",
+                            name="Report Stick", vendor_id="1234", product_id="5678", mounts=["/usb"], details={})
+    response = client.get("/api/reports")
+    payload = response.get_json()
+    assert response.status_code == 200 and payload["source"] == "live" and payload["total"] == 1
+    report = payload["data"][0]
+    assert report["severity"] == "HIGH" and report["sensitiveFileCount"] == 1
+    assert report["fileCount"] == 1 and report["status"] == "COMPLETE"
+    assert [step["type"] for step in report["timeline"]] == ["usb", "file", "usb"]
+    client.db.add_usb_event(event_type="INSERTED", timestamp="2026-11-03T10:10:00Z", device_id="R1",
+                            name="Report Stick", vendor_id="1234", product_id="5678", mounts=["/usb"], details={})
+    client.db.add_file_event(event_type="CREATED", timestamp="2026-11-03T10:12:00Z", path="/usb/second.txt",
+                             file_name="second.txt", sensitive=0, on_removable=1, volume="/usb",
+                             usb_device_id="R1", risk="LOW", details={})
+    client.db.add_usb_event(event_type="REMOVED", timestamp="2026-11-03T10:15:00Z", device_id="R1",
+                            name="Report Stick", vendor_id="1234", product_id="5678", mounts=["/usb"], details={})
+    updated = client.get("/api/reports").get_json()
+    assert updated["total"] == 1
+    assert updated["data"][0]["id"] == report["id"]
+    assert updated["data"][0]["fileCount"] == 2
+    assert "2 session(s)" in updated["data"][0]["summary"]
+    client.db.add_usb_event(event_type="INSERTED", timestamp="2026-11-03T11:00:00Z", device_id="HID1",
+                            name="Keyboard", vendor_id="4321", product_id="8765", mounts=[], details={})
+    filtered = client.get("/api/reports").get_json()
+    assert filtered["total"] == 1 and filtered["data"][0]["id"] == report["id"]
+    exported = client.get(f"/api/reports/{report['id']}/export")
+    assert exported.status_code == 200 and exported.mimetype == "application/xml"
+    assert b"secret.txt" in exported.data and b"<severity>HIGH</severity>" in exported.data
+    assert client.get("/api/reports/missing/export").status_code == 404
+
+
 def test_unknown_route_and_method_return_json_errors(client):
     r = client.get("/api/nope")
     assert r.status_code == 404 and r.get_json()["error"]

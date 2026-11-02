@@ -1,4 +1,4 @@
-import { mockIncidents, mockReports } from '../data/mockData.js'
+import { mockIncidents } from '../data/mockData.js'
 import { normalizeList, normalizeNetworkEvents, normalizeNetworkStats, normalizeNetworkTraffic, normalizeObject, normalizeUsbDevices, normalizeUsbSimulation } from './normalize.js'
 
 // Direct requests; Flask enables CORS. VITE_API_URL includes /api.
@@ -6,7 +6,7 @@ export const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://127.0.0.1:
 export const ENDPOINTS = {
   status: '/status', usbDevices: '/usb/devices', usbEvents: '/usb/events',
   fileEvents: '/files/events', sensitiveFiles: '/files/sensitive', fileStats: '/files/stats', alerts: '/alerts',
-  networkEvents: '/network/events', networkStats: '/network/stats', networkTraffic: '/network/traffic',
+  networkEvents: '/network/events', networkStats: '/network/stats', networkTraffic: '/network/traffic', reports: '/reports',
 }
 export async function get(path, { signal } = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, { signal, cache: 'no-store' })
@@ -50,9 +50,24 @@ export async function changeMonitoredFolder(action, path, previousPath) {
   return normalizeObject(payload)
 }
 export const getAlerts = list(`${ENDPOINTS.alerts}?limit=200`)
+export const getReports = async (options) => normalizeList(await get(`${ENDPOINTS.reports}?limit=100`, options))
+export async function exportReport(reportId) {
+  const path = `${ENDPOINTS.reports}/${encodeURIComponent(reportId)}/export`
+  const response = await fetch(`${API_BASE_URL}${path}`, { cache: 'no-store' })
+  if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`)
+  return response.blob()
+}
 // Explicit preview pages only; never a fallback for failed live requests.
 export const getNetworkEvents = async (options) => normalizeNetworkEvents(await get(ENDPOINTS.networkEvents, options))
 export const getNetworkStats = async (options) => normalizeNetworkStats(await get(ENDPOINTS.networkStats, options))
 export const getTrafficSeries = async (options) => normalizeNetworkTraffic(await get(ENDPOINTS.networkTraffic, options))
+function lastHourPath(path) {
+  // Match the backend's second-resolution UTC-Z timestamps for SQL comparisons.
+  const end = Math.floor(Date.now() / 1000) * 1000
+  const iso = (value) => new Date(value).toISOString().replace('.000Z', 'Z')
+  const query = new URLSearchParams({ start: iso(end - 60 * 60 * 1000), end: iso(end) })
+  return `${path}?${query}`
+}
+export const getRecentNetworkEvents = async (options) => normalizeNetworkEvents(await get(lastHourPath(ENDPOINTS.networkEvents), options))
+export const getRecentTrafficSeries = async (options) => normalizeNetworkTraffic(await get(lastHourPath(ENDPOINTS.networkTraffic), options))
 export const getIncidents = async () => mockIncidents
-export const getReports = async () => mockReports

@@ -10,14 +10,14 @@ import { summarizeNetworkEvents } from '../services/networkSummary'
 import LoadingState from '../components/LoadingState'
 import LiveState from '../components/LiveState'
 import { useApi } from '../hooks'
-import { getNetworkEvents, getNetworkStats, getTrafficSeries } from '../services/api'
+import { getRecentNetworkEvents, getNetworkStats, getRecentTrafficSeries } from '../services/api'
 import { formatBytes, formatNumber } from '../utils/format'
 
 export default function NetworkAnalysis() {
   const [direction, setDirection] = useState('OUTBOUND')
-  const events = useApi(getNetworkEvents)
+  const events = useApi(getRecentNetworkEvents)
   const stats = useApi(getNetworkStats)
-  const series = useApi(getTrafficSeries)
+  const series = useApi(getRecentTrafficSeries)
 
   if (events.loading || stats.loading || series.loading) return <LoadingState label="Loading network traffic..." />
 
@@ -29,7 +29,6 @@ export default function NetworkAnalysis() {
 
   const flagged = events.data.filter((e) => e.direction === 'OUTBOUND' && e.risk === 'HIGH')
   const destinations = [...new Set(flagged.map((e) => e.destinationIp))]
-  const sessions = [...new Set(flagged.map((e) => e.usbSession).filter(Boolean))]
   const outbound = summarizeNetworkEvents(events.data, 'OUTBOUND')
   const inbound = summarizeNetworkEvents(events.data, 'INBOUND')
   const internal = events.data.filter((event) => event.direction === 'INTERNAL')
@@ -53,18 +52,15 @@ export default function NetworkAnalysis() {
             <span className="font-semibold text-crit">Suspicious outbound traffic: </span>
             {flagged.length} high-risk flow record{flagged.length > 1 ? 's' : ''} to{' '}
             <span className="font-mono text-xs">{destinations.join(', ')}</span>.
-            {sessions.length > 0
-              ? <> Tagged to USB session{sessions.length > 1 ? 's' : ''} <span className="font-mono text-xs">{sessions.join(', ')}</span>.</>
-              : ' No USB session is tagged on these records.'}
           </p>
         </div>
       )}
 
-      <Panel title="Traffic Over Time" icon={Activity} className="mb-4" bodyClassName="p-4">
+      <Panel title="Traffic Over Time · Last hour" icon={Activity} className="mb-4" bodyClassName="p-4">
         <Chart data={series.data} />
       </Panel>
 
-      <p className="mb-3 text-xs text-ink-dim">Totals across stored flow records, grouped by IP and sorted by bytes transferred. Risk is the highest recorded flow risk.</p>
+      <p className="mb-3 text-xs text-ink-dim">Last hour · Updates automatically. Flow records are grouped by IP and sorted by bytes transferred. Risk is the highest recorded flow risk in this window.</p>
       <div role="group" aria-label="Traffic direction" className="mb-3 inline-flex rounded-sm border border-line bg-panel p-1">
         {[
           { value: 'OUTBOUND', label: 'Outbound', count: outbound.length },

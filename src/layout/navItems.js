@@ -1,4 +1,4 @@
-import { FileSearch, LayoutDashboard, Network, ShieldAlert, FileText, Usb } from 'lucide-react'
+import { FileSearch, LayoutDashboard, Network, FileText, Usb } from 'lucide-react'
 
 export const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -6,6 +6,5 @@ export const NAV_ITEMS = [
   { to: '/usb-recovery', label: 'USB Recovery', icon: FileSearch },
   { to: '/files', label: 'File Monitoring', icon: FileSearch },
   { to: '/network', label: 'Network', icon: Network },
-  { to: '/incidents', label: 'Incidents (sample)', icon: ShieldAlert },
-  { to: '/reports', label: 'Reports (sample)', icon: FileText },
+  { to: '/reports', label: 'Reports', icon: FileText },
 ]

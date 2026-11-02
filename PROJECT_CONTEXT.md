@@ -355,7 +355,9 @@ shape. *Suggestion — confirm and record the real name here later.*
 * **Stop your dev servers** (backend + `npm run dev`) after testing.
 * **Dashboard, USB Forensics and File Monitoring use live file/USB data.**
   Network Analysis uses the live network routes when the combined launcher is
-  running. Unified Incidents and Reports remain labeled sample previews.
+  running. Reports show the latest mounted USB mass-storage device, group its
+  connection sessions, summarize removable-file/network activity, and export as
+  XML. Network evidence is included when the network database is available.
 * **Times shown in the browser are local time** (IST here) while the API stores
   UTC — expected.
 
@@ -406,11 +408,12 @@ shape. *Suggestion — confirm and record the real name here later.*
 - [ ] Plain-Python file-events-in-window accessor for the correlation engine.
 - [x] Backend monitoring/detection tests and frontend normalization/polling tests.
 
-### D. Correlation + backend integration + Reports (part 4 — not started; do last)
+### D. Correlation + backend integration + Reports (part 4 — in progress)
 - [ ] Flask app factory that mounts every module blueprint under `/api`.
 - [ ] Join USB + file + network events per USB session window; set `usbSession` on network events.
 - [ ] Build incidents (`mockIncidents` shape) and alerts (`mockAlerts` shape).
-- [ ] XML report export (`mockReports` shape) + `/api/incidents`, `/api/alerts`, `/api/reports`.
+- [x] One live report for the latest mounted USB mass-storage device, aggregating its connection sessions and removable-file/network evidence; `/api/reports` and XML export.
+- [ ] Full USB session IDs, unified incidents, and `/api/incidents`.
 - [ ] Dashboard summary endpoint (`/api/dashboard`).
 - [ ] End-to-end test.
 

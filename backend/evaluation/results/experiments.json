@@ -1,0 +1,1927 @@
+{
+  "completedAt": "2026-11-02T20:11:24.337872Z",
+  "python": "3.14.5 (tags/v3.14.5:5607950, May 10 2026, 10:43:50) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "methodology": "Default service configuration, real watchdog and SQLite, asynchronous detection, 10ms observation polling. USB is a temporary folder and synthetic backend, forced polls exclude physical enumeration/poll interval. Network inputs synthetic; timings exclude capture. CPU includes experiment driver. No UI latency measured.",
+  "summary": [
+    {
+      "scenario": "file-create",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 34.561499999999995,
+      "p95Ms": 53.133
+    },
+    {
+      "scenario": "file-modify",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 27.365000000000002,
+      "p95Ms": 45.322
+    },
+    {
+      "scenario": "file-rename",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 35.608000000000004,
+      "p95Ms": 54.478
+    },
+    {
+      "scenario": "file-delete",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 32.0865,
+      "p95Ms": 48.481
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 39.8375,
+      "p95Ms": 52.652
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 22.986,
+      "p95Ms": 26.605
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 687.0515,
+      "p95Ms": 714.479
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": null,
+      "p95Ms": null
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 0.05880001117475331,
+      "p95Ms": 0.1066999975591898
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 0.06054999539628625,
+      "p95Ms": 0.08160003926604986
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 0.05590001819655299,
+      "p95Ms": 0.06299995584413409
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 0.05425000563263893,
+      "p95Ms": 0.057399971410632133
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "trials": 20,
+      "passed": 20,
+      "medianMs": 0.0525499926880002,
+      "p95Ms": 0.05400000372901559
+    }
+  ],
+  "resources": [
+    {
+      "phase": "service-stopped-idle",
+      "durationSeconds": 5.00035879999632,
+      "processCpuPercentOneCore": 0.0
+    },
+    {
+      "phase": "monitoring-idle-synthetic-usb-backend",
+      "durationSeconds": 5.000148200022522,
+      "processCpuPercentOneCore": 0.0
+    },
+    {
+      "phase": "80-filesystem-actions-including-dedupe-waits",
+      "durationSeconds": 34.82084010000108,
+      "processCpuPercentOneCore": 4.038529788372212
+    },
+    {
+      "phase": "20-renamed-64KiB-copies",
+      "durationSeconds": 14.013631100009661,
+      "processCpuPercentOneCore": 39.136002374118576
+    }
+  ],
+  "trials": [
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:22.085034Z",
+      "observedAt": "2026-11-02T20:10:22.106492Z",
+      "passed": true,
+      "latencyMs": 21.452
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:23.706709Z",
+      "observedAt": "2026-11-02T20:10:23.743717Z",
+      "passed": true,
+      "latencyMs": 37.005
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:23.743761Z",
+      "observedAt": "2026-11-02T20:10:23.773945Z",
+      "passed": true,
+      "latencyMs": 30.198
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:23.773973Z",
+      "observedAt": "2026-11-02T20:10:23.827357Z",
+      "passed": true,
+      "latencyMs": 53.396
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:23.827398Z",
+      "observedAt": "2026-11-02T20:10:23.852085Z",
+      "passed": true,
+      "latencyMs": 24.705
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:25.452454Z",
+      "observedAt": "2026-11-02T20:10:25.472659Z",
+      "passed": true,
+      "latencyMs": 20.204
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:25.472706Z",
+      "observedAt": "2026-11-02T20:10:25.510575Z",
+      "passed": true,
+      "latencyMs": 37.885
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:25.510609Z",
+      "observedAt": "2026-11-02T20:10:25.541760Z",
+      "passed": true,
+      "latencyMs": 31.167
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:25.541815Z",
+      "observedAt": "2026-11-02T20:10:25.566606Z",
+      "passed": true,
+      "latencyMs": 24.8
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:27.167149Z",
+      "observedAt": "2026-11-02T20:10:27.212493Z",
+      "passed": true,
+      "latencyMs": 45.322
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:27.212527Z",
+      "observedAt": "2026-11-02T20:10:27.247672Z",
+      "passed": true,
+      "latencyMs": 35.158
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:27.247699Z",
+      "observedAt": "2026-11-02T20:10:27.271550Z",
+      "passed": true,
+      "latencyMs": 23.864
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:27.271590Z",
+      "observedAt": "2026-11-02T20:10:27.306273Z",
+      "passed": true,
+      "latencyMs": 34.695
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:28.906760Z",
+      "observedAt": "2026-11-02T20:10:28.929767Z",
+      "passed": true,
+      "latencyMs": 22.996
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:28.929798Z",
+      "observedAt": "2026-11-02T20:10:28.950711Z",
+      "passed": true,
+      "latencyMs": 20.928
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:28.950741Z",
+      "observedAt": "2026-11-02T20:10:28.975121Z",
+      "passed": true,
+      "latencyMs": 24.395
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:28.975169Z",
+      "observedAt": "2026-11-02T20:10:29.016076Z",
+      "passed": true,
+      "latencyMs": 40.918
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:30.616389Z",
+      "observedAt": "2026-11-02T20:10:30.645906Z",
+      "passed": true,
+      "latencyMs": 29.513
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:30.645954Z",
+      "observedAt": "2026-11-02T20:10:30.689737Z",
+      "passed": true,
+      "latencyMs": 43.793
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:30.689764Z",
+      "observedAt": "2026-11-02T20:10:30.725276Z",
+      "passed": true,
+      "latencyMs": 35.528
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:30.725323Z",
+      "observedAt": "2026-11-02T20:10:30.753633Z",
+      "passed": true,
+      "latencyMs": 28.321
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:32.354118Z",
+      "observedAt": "2026-11-02T20:10:32.428131Z",
+      "passed": true,
+      "latencyMs": 74.009
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:32.428181Z",
+      "observedAt": "2026-11-02T20:10:32.448234Z",
+      "passed": true,
+      "latencyMs": 20.07
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:32.448268Z",
+      "observedAt": "2026-11-02T20:10:32.496731Z",
+      "passed": true,
+      "latencyMs": 48.481
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:32.496789Z",
+      "observedAt": "2026-11-02T20:10:32.536927Z",
+      "passed": true,
+      "latencyMs": 40.155
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:34.137107Z",
+      "observedAt": "2026-11-02T20:10:34.173518Z",
+      "passed": true,
+      "latencyMs": 36.404
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:34.173557Z",
+      "observedAt": "2026-11-02T20:10:34.204736Z",
+      "passed": true,
+      "latencyMs": 31.197
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:34.204772Z",
+      "observedAt": "2026-11-02T20:10:34.251033Z",
+      "passed": true,
+      "latencyMs": 46.278
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:34.251083Z",
+      "observedAt": "2026-11-02T20:10:34.274789Z",
+      "passed": true,
+      "latencyMs": 23.716
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:35.875081Z",
+      "observedAt": "2026-11-02T20:10:35.897587Z",
+      "passed": true,
+      "latencyMs": 22.499
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:35.897619Z",
+      "observedAt": "2026-11-02T20:10:35.939640Z",
+      "passed": true,
+      "latencyMs": 42.038
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:35.939677Z",
+      "observedAt": "2026-11-02T20:10:35.978807Z",
+      "passed": true,
+      "latencyMs": 39.144
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:35.978853Z",
+      "observedAt": "2026-11-02T20:10:36.016455Z",
+      "passed": true,
+      "latencyMs": 37.61
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:37.617025Z",
+      "observedAt": "2026-11-02T20:10:37.653680Z",
+      "passed": true,
+      "latencyMs": 36.643
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:37.653712Z",
+      "observedAt": "2026-11-02T20:10:37.675380Z",
+      "passed": true,
+      "latencyMs": 21.677
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:37.675402Z",
+      "observedAt": "2026-11-02T20:10:37.713345Z",
+      "passed": true,
+      "latencyMs": 37.96
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:37.713393Z",
+      "observedAt": "2026-11-02T20:10:37.766509Z",
+      "passed": true,
+      "latencyMs": 53.133
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:39.366728Z",
+      "observedAt": "2026-11-02T20:10:39.395028Z",
+      "passed": true,
+      "latencyMs": 28.286
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:39.395071Z",
+      "observedAt": "2026-11-02T20:10:39.427002Z",
+      "passed": true,
+      "latencyMs": 31.956
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:39.427049Z",
+      "observedAt": "2026-11-02T20:10:39.461360Z",
+      "passed": true,
+      "latencyMs": 34.324
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:39.461404Z",
+      "observedAt": "2026-11-02T20:10:39.501096Z",
+      "passed": true,
+      "latencyMs": 39.711
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:41.101681Z",
+      "observedAt": "2026-11-02T20:10:41.126124Z",
+      "passed": true,
+      "latencyMs": 24.442
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:41.126203Z",
+      "observedAt": "2026-11-02T20:10:41.163343Z",
+      "passed": true,
+      "latencyMs": 37.16
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:41.163381Z",
+      "observedAt": "2026-11-02T20:10:41.188448Z",
+      "passed": true,
+      "latencyMs": 25.086
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:41.188518Z",
+      "observedAt": "2026-11-02T20:10:41.222938Z",
+      "passed": true,
+      "latencyMs": 34.428
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:42.823386Z",
+      "observedAt": "2026-11-02T20:10:42.849837Z",
+      "passed": true,
+      "latencyMs": 26.444
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:42.849881Z",
+      "observedAt": "2026-11-02T20:10:42.895042Z",
+      "passed": true,
+      "latencyMs": 45.166
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:42.895066Z",
+      "observedAt": "2026-11-02T20:10:42.932922Z",
+      "passed": true,
+      "latencyMs": 37.89
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:42.933011Z",
+      "observedAt": "2026-11-02T20:10:42.983139Z",
+      "passed": true,
+      "latencyMs": 50.146
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:44.583656Z",
+      "observedAt": "2026-11-02T20:10:44.608948Z",
+      "passed": true,
+      "latencyMs": 25.288
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:44.608986Z",
+      "observedAt": "2026-11-02T20:10:44.672309Z",
+      "passed": true,
+      "latencyMs": 63.338
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:44.672339Z",
+      "observedAt": "2026-11-02T20:10:44.697700Z",
+      "passed": true,
+      "latencyMs": 25.374
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:44.697740Z",
+      "observedAt": "2026-11-02T20:10:44.733724Z",
+      "passed": true,
+      "latencyMs": 35.996
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:46.334186Z",
+      "observedAt": "2026-11-02T20:10:46.363601Z",
+      "passed": true,
+      "latencyMs": 29.407
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:46.363635Z",
+      "observedAt": "2026-11-02T20:10:46.418074Z",
+      "passed": true,
+      "latencyMs": 54.478
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:46.418128Z",
+      "observedAt": "2026-11-02T20:10:46.442423Z",
+      "passed": true,
+      "latencyMs": 24.324
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:46.442475Z",
+      "observedAt": "2026-11-02T20:10:46.468522Z",
+      "passed": true,
+      "latencyMs": 26.067
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:48.069102Z",
+      "observedAt": "2026-11-02T20:10:48.107676Z",
+      "passed": true,
+      "latencyMs": 38.565
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:48.107717Z",
+      "observedAt": "2026-11-02T20:10:48.131210Z",
+      "passed": true,
+      "latencyMs": 23.504
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:48.131234Z",
+      "observedAt": "2026-11-02T20:10:48.164226Z",
+      "passed": true,
+      "latencyMs": 33.006
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:48.164269Z",
+      "observedAt": "2026-11-02T20:10:48.193874Z",
+      "passed": true,
+      "latencyMs": 29.616
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:49.793959Z",
+      "observedAt": "2026-11-02T20:10:49.818346Z",
+      "passed": true,
+      "latencyMs": 24.384
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:49.818388Z",
+      "observedAt": "2026-11-02T20:10:49.856670Z",
+      "passed": true,
+      "latencyMs": 38.293
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:49.856694Z",
+      "observedAt": "2026-11-02T20:10:49.884292Z",
+      "passed": true,
+      "latencyMs": 27.618
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:49.884347Z",
+      "observedAt": "2026-11-02T20:10:49.909858Z",
+      "passed": true,
+      "latencyMs": 25.52
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:51.509928Z",
+      "observedAt": "2026-11-02T20:10:51.549010Z",
+      "passed": true,
+      "latencyMs": 39.078
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:51.549055Z",
+      "observedAt": "2026-11-02T20:10:51.597466Z",
+      "passed": true,
+      "latencyMs": 48.423
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:51.597492Z",
+      "observedAt": "2026-11-02T20:10:51.618882Z",
+      "passed": true,
+      "latencyMs": 21.404
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:51.618937Z",
+      "observedAt": "2026-11-02T20:10:51.784655Z",
+      "passed": true,
+      "latencyMs": 165.732
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:53.384869Z",
+      "observedAt": "2026-11-02T20:10:53.409367Z",
+      "passed": true,
+      "latencyMs": 24.494
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:53.409433Z",
+      "observedAt": "2026-11-02T20:10:53.445423Z",
+      "passed": true,
+      "latencyMs": 36.0
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:53.445449Z",
+      "observedAt": "2026-11-02T20:10:53.471621Z",
+      "passed": true,
+      "latencyMs": 26.222
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:53.471700Z",
+      "observedAt": "2026-11-02T20:10:53.509132Z",
+      "passed": true,
+      "latencyMs": 37.444
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:55.109709Z",
+      "observedAt": "2026-11-02T20:10:55.132503Z",
+      "passed": true,
+      "latencyMs": 22.794
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:55.132559Z",
+      "observedAt": "2026-11-02T20:10:55.167765Z",
+      "passed": true,
+      "latencyMs": 35.216
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:55.167790Z",
+      "observedAt": "2026-11-02T20:10:55.206736Z",
+      "passed": true,
+      "latencyMs": 38.956
+    },
+    {
+      "scenario": "file-create",
+      "actionAt": "2026-11-02T20:10:55.206769Z",
+      "observedAt": "2026-11-02T20:10:55.229186Z",
+      "passed": true,
+      "latencyMs": 22.427
+    },
+    {
+      "scenario": "file-modify",
+      "actionAt": "2026-11-02T20:10:56.829615Z",
+      "observedAt": "2026-11-02T20:10:56.854427Z",
+      "passed": true,
+      "latencyMs": 24.805
+    },
+    {
+      "scenario": "file-rename",
+      "actionAt": "2026-11-02T20:10:56.854461Z",
+      "observedAt": "2026-11-02T20:10:56.876356Z",
+      "passed": true,
+      "latencyMs": 21.906
+    },
+    {
+      "scenario": "file-delete",
+      "actionAt": "2026-11-02T20:10:56.876381Z",
+      "observedAt": "2026-11-02T20:10:56.905806Z",
+      "passed": true,
+      "latencyMs": 29.436
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:56.905866Z",
+      "observedAt": "2026-11-02T20:10:56.949006Z",
+      "passed": true,
+      "latencyMs": 43.153
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:56.949036Z",
+      "observedAt": "2026-11-02T20:10:56.973287Z",
+      "passed": true,
+      "latencyMs": 24.248
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:56.973324Z",
+      "observedAt": "2026-11-02T20:10:57.016443Z",
+      "passed": true,
+      "latencyMs": 43.129
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.016473Z",
+      "observedAt": "2026-11-02T20:10:57.040054Z",
+      "passed": true,
+      "latencyMs": 23.592
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.040085Z",
+      "observedAt": "2026-11-02T20:10:57.081143Z",
+      "passed": true,
+      "latencyMs": 41.068
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.081167Z",
+      "observedAt": "2026-11-02T20:10:57.105607Z",
+      "passed": true,
+      "latencyMs": 24.451
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.105635Z",
+      "observedAt": "2026-11-02T20:10:57.143491Z",
+      "passed": true,
+      "latencyMs": 37.866
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.143515Z",
+      "observedAt": "2026-11-02T20:10:57.165578Z",
+      "passed": true,
+      "latencyMs": 22.077
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.165613Z",
+      "observedAt": "2026-11-02T20:10:57.204724Z",
+      "passed": true,
+      "latencyMs": 39.121
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.204749Z",
+      "observedAt": "2026-11-02T20:10:57.227267Z",
+      "passed": true,
+      "latencyMs": 22.528
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.227293Z",
+      "observedAt": "2026-11-02T20:10:57.361033Z",
+      "passed": true,
+      "latencyMs": 133.75
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.361058Z",
+      "observedAt": "2026-11-02T20:10:57.383413Z",
+      "passed": true,
+      "latencyMs": 22.366
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.383445Z",
+      "observedAt": "2026-11-02T20:10:57.422939Z",
+      "passed": true,
+      "latencyMs": 39.504
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.422981Z",
+      "observedAt": "2026-11-02T20:10:57.444682Z",
+      "passed": true,
+      "latencyMs": 21.709
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.444707Z",
+      "observedAt": "2026-11-02T20:10:57.484866Z",
+      "passed": true,
+      "latencyMs": 40.171
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.484894Z",
+      "observedAt": "2026-11-02T20:10:57.507933Z",
+      "passed": true,
+      "latencyMs": 23.05
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.507962Z",
+      "observedAt": "2026-11-02T20:10:57.552018Z",
+      "passed": true,
+      "latencyMs": 44.069
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.552046Z",
+      "observedAt": "2026-11-02T20:10:57.578637Z",
+      "passed": true,
+      "latencyMs": 26.605
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.578673Z",
+      "observedAt": "2026-11-02T20:10:57.617497Z",
+      "passed": true,
+      "latencyMs": 38.844
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.617533Z",
+      "observedAt": "2026-11-02T20:10:57.640135Z",
+      "passed": true,
+      "latencyMs": 22.611
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.640161Z",
+      "observedAt": "2026-11-02T20:10:57.678817Z",
+      "passed": true,
+      "latencyMs": 38.665
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.678840Z",
+      "observedAt": "2026-11-02T20:10:57.701285Z",
+      "passed": true,
+      "latencyMs": 22.478
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.701356Z",
+      "observedAt": "2026-11-02T20:10:57.750870Z",
+      "passed": true,
+      "latencyMs": 49.538
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.750920Z",
+      "observedAt": "2026-11-02T20:10:57.773205Z",
+      "passed": true,
+      "latencyMs": 22.294
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.773231Z",
+      "observedAt": "2026-11-02T20:10:57.812113Z",
+      "passed": true,
+      "latencyMs": 38.872
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.812146Z",
+      "observedAt": "2026-11-02T20:10:57.837546Z",
+      "passed": true,
+      "latencyMs": 25.41
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.837573Z",
+      "observedAt": "2026-11-02T20:10:57.876882Z",
+      "passed": true,
+      "latencyMs": 39.318
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.876905Z",
+      "observedAt": "2026-11-02T20:10:57.899018Z",
+      "passed": true,
+      "latencyMs": 22.126
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.899051Z",
+      "observedAt": "2026-11-02T20:10:57.951691Z",
+      "passed": true,
+      "latencyMs": 52.652
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.951750Z",
+      "observedAt": "2026-11-02T20:10:57.974715Z",
+      "passed": true,
+      "latencyMs": 22.974
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:57.974742Z",
+      "observedAt": "2026-11-02T20:10:58.013273Z",
+      "passed": true,
+      "latencyMs": 38.541
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:58.013297Z",
+      "observedAt": "2026-11-02T20:10:58.036284Z",
+      "passed": true,
+      "latencyMs": 22.998
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:58.036315Z",
+      "observedAt": "2026-11-02T20:10:58.076708Z",
+      "passed": true,
+      "latencyMs": 40.408
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:58.076738Z",
+      "observedAt": "2026-11-02T20:10:58.106697Z",
+      "passed": true,
+      "latencyMs": 29.969
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:58.106725Z",
+      "observedAt": "2026-11-02T20:10:58.145474Z",
+      "passed": true,
+      "latencyMs": 38.759
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:58.145497Z",
+      "observedAt": "2026-11-02T20:10:58.169364Z",
+      "passed": true,
+      "latencyMs": 23.888
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:58.169417Z",
+      "observedAt": "2026-11-02T20:10:58.208456Z",
+      "passed": true,
+      "latencyMs": 39.046
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:58.208479Z",
+      "observedAt": "2026-11-02T20:10:58.230931Z",
+      "passed": true,
+      "latencyMs": 22.463
+    },
+    {
+      "scenario": "synthetic-usb-insert-forced-poll",
+      "actionAt": "2026-11-02T20:10:58.230959Z",
+      "observedAt": "2026-11-02T20:10:58.281195Z",
+      "passed": true,
+      "latencyMs": 50.262
+    },
+    {
+      "scenario": "synthetic-usb-remove-forced-poll",
+      "actionAt": "2026-11-02T20:10:58.281236Z",
+      "observedAt": "2026-11-02T20:10:58.304391Z",
+      "passed": true,
+      "latencyMs": 23.167
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:10:58.344315Z",
+      "observedAt": "2026-11-02T20:10:59.056411Z",
+      "passed": true,
+      "latencyMs": 712.093
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:10:59.059833Z",
+      "observedAt": "2026-11-02T20:10:59.744892Z",
+      "passed": true,
+      "latencyMs": 685.062
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:10:59.747600Z",
+      "observedAt": "2026-11-02T20:11:00.593446Z",
+      "passed": true,
+      "latencyMs": 845.85
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:00.597262Z",
+      "observedAt": "2026-11-02T20:11:01.294480Z",
+      "passed": true,
+      "latencyMs": 697.221
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:01.310942Z",
+      "observedAt": "2026-11-02T20:11:02.020386Z",
+      "passed": true,
+      "latencyMs": 709.44
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:02.023830Z",
+      "observedAt": "2026-11-02T20:11:02.704162Z",
+      "passed": true,
+      "latencyMs": 680.322
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:02.707016Z",
+      "observedAt": "2026-11-02T20:11:03.406904Z",
+      "passed": true,
+      "latencyMs": 699.89
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:03.410029Z",
+      "observedAt": "2026-11-02T20:11:04.124506Z",
+      "passed": true,
+      "latencyMs": 714.479
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:04.140510Z",
+      "observedAt": "2026-11-02T20:11:04.833701Z",
+      "passed": true,
+      "latencyMs": 693.192
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:04.836727Z",
+      "observedAt": "2026-11-02T20:11:05.536610Z",
+      "passed": true,
+      "latencyMs": 699.883
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:05.539592Z",
+      "observedAt": "2026-11-02T20:11:06.198473Z",
+      "passed": true,
+      "latencyMs": 658.876
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:06.201489Z",
+      "observedAt": "2026-11-02T20:11:06.872909Z",
+      "passed": true,
+      "latencyMs": 671.424
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:06.890586Z",
+      "observedAt": "2026-11-02T20:11:07.557981Z",
+      "passed": true,
+      "latencyMs": 667.393
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:07.565740Z",
+      "observedAt": "2026-11-02T20:11:08.254770Z",
+      "passed": true,
+      "latencyMs": 689.041
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:08.264120Z",
+      "observedAt": "2026-11-02T20:11:08.948678Z",
+      "passed": true,
+      "latencyMs": 684.559
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:08.959193Z",
+      "observedAt": "2026-11-02T20:11:09.643563Z",
+      "passed": true,
+      "latencyMs": 684.371
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:09.646730Z",
+      "observedAt": "2026-11-02T20:11:10.308722Z",
+      "passed": true,
+      "latencyMs": 661.992
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:10.316885Z",
+      "observedAt": "2026-11-02T20:11:10.989735Z",
+      "passed": true,
+      "latencyMs": 672.854
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:10.992825Z",
+      "observedAt": "2026-11-02T20:11:11.689788Z",
+      "passed": true,
+      "latencyMs": 696.965
+    },
+    {
+      "scenario": "renamed-copy-to-synthetic-usb",
+      "actionAt": "2026-11-02T20:11:11.693757Z",
+      "observedAt": "2026-11-02T20:11:12.355157Z",
+      "passed": true,
+      "latencyMs": 661.405
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:12.658917Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:12.966804Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:13.292428Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:13.602509Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:13.910432Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:14.227642Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:14.553740Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:14.860981Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:15.168574Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:15.475794Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:15.784463Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:16.091214Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:16.399016Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:16.708303Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:17.017312Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:17.327370Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:17.634811Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:17.941624Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:18.251534Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "unmatched-file-no-verified-transfer",
+      "actionAt": "2026-11-02T20:11:18.559864Z",
+      "passed": true,
+      "latencyMs": null
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 1.006399979814887
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.1066999975591898
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.06940000457689166
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.062000006437301636
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.06150000263005495
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.06029999349266291
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.0591999851167202
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05760003114119172
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05819997750222683
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05630002124235034
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.06639998173341155
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.059999991208314896
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.055800017435103655
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.0667999847792089
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05840003723278642
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05709996912628412
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05560001591220498
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.055500015150755644
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05470000905916095
+    },
+    {
+      "scenario": "network-synthetic-normal-known-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.055100012104958296
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.12800004333257675
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.07509998977184296
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.06369996117427945
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.08160003926604986
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.06359996041283011
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.0798000255599618
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.06390002090483904
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.0610999995842576
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.06059999577701092
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.059699988923966885
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.06049999501556158
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.060399994254112244
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05930004408583045
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.06009999196976423
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.060399994254112244
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.059399986639618874
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.06019999273121357
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.0591999851167202
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.07170002209022641
+    },
+    {
+      "scenario": "network-synthetic-large-known-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.059999991208314896
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.06299995584413409
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.0667999847792089
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05879998207092285
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05670002428814769
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05630002124235034
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.055500015150755644
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05609996151179075
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.055999960750341415
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05570001667365432
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05560001591220498
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05590001819655299
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.054800009820610285
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.055500015150755644
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.06059999577701092
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.055800017435103655
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05490001058205962
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05549995694309473
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05720002809539437
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05590001819655299
+    },
+    {
+      "scenario": "network-synthetic-new-destination-upload",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05420000525191426
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.057399971410632133
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.057299970649182796
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05570001667365432
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05500001134350896
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05440000677481294
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.0543000060133636
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.0543000060133636
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.053499999921768904
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.053099996875971556
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.06430002395063639
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.054800009820610285
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05420000525191426
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05400000372901559
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05370000144466758
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05329999839887023
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.054100004490464926
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05360000068321824
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05389994475990534
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05460000829771161
+    },
+    {
+      "scenario": "network-synthetic-external-watchlist-port",
+      "passed": true,
+      "expectedAlert": true,
+      "observedAlert": true,
+      "latencyMs": 0.05370000144466758
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05219999002292752
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05139998393133283
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05280005279928446
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05400000372901559
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05360000068321824
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05299999611452222
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.054100004490464926
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.052499992307275534
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.052499992307275534
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.0523999915458262
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.052799994591623545
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.052099989261478186
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05300005432218313
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.053099996875971556
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.052499992307275534
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.052799994591623545
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05259999306872487
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05219999002292752
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.05189998773857951
+    },
+    {
+      "scenario": "network-synthetic-small-new-https",
+      "passed": true,
+      "expectedAlert": false,
+      "observedAlert": false,
+      "latencyMs": 0.051900045946240425
+    }
+  ],
+  "postShutdownAlertCounts": {
+    "SUSPICIOUS": 1,
+    "VERIFIED_TRANSFER": 20
+  }
+}
