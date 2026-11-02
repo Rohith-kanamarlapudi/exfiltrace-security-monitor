@@ -71,6 +71,7 @@ class FileMonitor:
         self.classifier = FileClassifier(config)
         self.volume_resolver = volume_resolver or (lambda p: None)
         self.on_event = on_event or (lambda e: None)
+        self.is_recovery_artifact = lambda path: False
         self.window = float(config.get("dedupe_window_seconds", 1.5))
         self._observer = None
         self._watches = {}          # normalized path -> {"path", "removable", "watch", "error"}
@@ -197,6 +198,8 @@ class FileMonitor:
     def handle(self, event_type, path, dest=None, watch_root=None):
         """Entry point for a raw file-system event. Returns the stored event or None."""
         try:
+            if self.is_recovery_artifact(path) or (dest and self.is_recovery_artifact(dest)):
+                return None  # recovery-owned artifacts have their own job audit trail
             if self._db_path and os.path.abspath(path).startswith(self._db_path):
                 return None
             effective = dest or path

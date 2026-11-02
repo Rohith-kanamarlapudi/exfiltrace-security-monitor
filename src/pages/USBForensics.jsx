@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { Usb } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import Panel from '../components/Panel'
 import USBTable from '../components/USBTable'
@@ -40,6 +41,7 @@ export default function USBForensics() {
       {devices.data && <USBTable devices={displayed} onSelect={(d) => setSelectedId(d.id)} selectedId={selected?.id} />}
       {selected && <p className="mt-3 break-all font-mono text-xs text-ink-dim">Device ID: {selected.deviceId} · Volume label: {selected.volumeLabel || 'Unavailable'}</p>}
       {selected && <USBInspection device={selected} showSource={false} />}
+      {selected?.mounts.length > 0 && <Link className="mt-3 inline-block text-sm text-accent" to={`/usb-recovery?deviceId=${encodeURIComponent(selected.deviceId)}`}>Recover deleted files → USB Recovery</Link>}
     </Panel>
     <Panel title="Recorded USB insertion / removal / mount history" className="mb-4" bodyClassName="p-3">
       <LiveState resource={history} label="USB history" />

@@ -353,11 +353,14 @@ shape. *Suggestion — confirm and record the real name here later.*
 - [x] Enumerate physical USB/PnP functions with identifiers, ancestry, available serials and connection observations.
 - [x] Versioned metadata SHA-256 fingerprints, SQLite observations/history, completeness and webpage integration.
 - [x] Isolated, opt-in physical-device BadUSB observation overlay and explainable unexpected-keyboard rule.
+- [x] Separate USB Recovery page/route: verified FAT32 imaging or raw-image import, cancellable jobs, deleted-entry scanning, selected-folder reconstruction and persisted job results.
+- [x] Recovery safeguards: local-only guarded API, read-only physical source handle, immutable internal working image, SHA-256 verification, bounded Sleuth Kit calls, safe output names and alert-pipeline isolation.
 - [ ] Physical BadUSB/impersonation verdicts (metadata changes alone are not proof).
 - [ ] Software write-blocking for evidence protection.
 - [x] Additive real inspection API fields and frontend normalization; unsupported mock capabilities remain unavailable.
 - [ ] Plain-Python USB-session accessor for the correlation engine.
 - [ ] Physical unplug/replug and multi-partition Windows hardware verification (automated coverage exists).
+- [ ] Physical FAT32 imaging, cancellation and recovery verification on Windows with The Sleuth Kit and a disposable test USB; use a hardware write blocker for evidentiary acquisition.
 
 ### C. File module (part 2 — file/USB monitoring implemented in `backend/app/`)
 - [x] `watchdog` monitoring over configured directories and discovered USB volumes.

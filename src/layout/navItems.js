@@ -3,6 +3,7 @@ import { FileSearch, LayoutDashboard, Network, ShieldAlert, FileText, Usb } from
 export const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/usb', label: 'USB Forensics', icon: Usb },
+  { to: '/usb-recovery', label: 'USB Recovery', icon: FileSearch },
   { to: '/files', label: 'File Monitoring', icon: FileSearch },
   { to: '/network', label: 'Network (sample)', icon: Network },
   { to: '/incidents', label: 'Incidents (sample)', icon: ShieldAlert },

@@ -217,9 +217,13 @@ def create_app(config=None, service=None, autostart=True):
         service = MonitoringService(config)
     app.config["SERVICE"] = service
     app.register_blueprint(bp)
+    from .usb.recovery.api import register as register_recovery
+    register_recovery(app, service)
 
     @app.after_request
     def cors(resp):  # dev convenience: the Vite dev server proxies /api, but allow direct calls too
+        if request.path.startswith('/api/usb/recovery'):
+            return resp
         if request.path == '/api/usb/simulation' and request.method != 'GET':
             if _local_simulation_request() and svc().usb.simulation.enabled:
                 resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', request.host_url.rstrip('/'))
