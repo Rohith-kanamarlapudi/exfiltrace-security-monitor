@@ -55,7 +55,7 @@ export default function NetworkTable({ events, variant = 'compact' }) {
       ),
     },
     { key: 'protocol', header: 'Protocol', className: mono, render: (e) => `${e.protocol}/${e.port}` },
-    { key: 'packetSizeBytes', header: 'Packet Size', className: mono, render: (e) => formatBytes(e.packetSizeBytes) },
+    { key: 'packetSizeBytes', header: 'Data Transferred', className: mono, render: (e) => formatBytes(e.packetSizeBytes) },
     { key: 'risk', header: 'Risk', render: (e) => <RiskBadge level={e.risk} /> },
   ]
 
