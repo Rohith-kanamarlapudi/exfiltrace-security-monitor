@@ -9,7 +9,10 @@ Run from the repository root::
 
     python -m backend.network.simulate_exfil            # clean demo DB
     python -m backend.network.simulate_exfil --append   # keep existing rows
-    python -m backend.network.simulate_exfil --db /tmp/demo.db
+    python -m backend.network.simulate_exfil --db <tempdir>/demo.db
+
+The default database lives under ``tempfile.gettempdir()`` so the same command
+works on macOS and Windows.
 """
 
 from __future__ import annotations
@@ -100,7 +103,11 @@ def run_demo(db_path: str | None = None, clean: bool = True) -> dict:
 def main() -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(description="Simulate the ExfilTrace exfiltration scenario (no real traffic).")
-    parser.add_argument("--db", default=None, help="SQLite path (default: module DB)")
+    parser.add_argument(
+        "--db",
+        default=str(config.default_demo_db()),
+        help=f"SQLite path (default: {config.default_demo_db()})",
+    )
     parser.add_argument("--append", action="store_true", help="Do not clear existing rows first")
     args = parser.parse_args()
 

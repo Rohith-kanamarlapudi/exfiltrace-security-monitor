@@ -71,7 +71,7 @@ genuinely needs OS-specific APIs (the USB and Windows-forensics modules do).
 |------|-----------------|--------|--------|--------|------------|
 | 1. USB Forensics + BadUSB Detection | Module 3: USB Forensics & Evidence Protection | `feature/usb` (suggested) | `backend/app/usb/` (actual) | storage + PnP interfaces + metadata fingerprint history + isolated BadUSB simulation implemented; physical verdicts pending | — |
 | 2. File Monitoring + USB Data-Theft Detection | Module 6: Windows Forensics (File Monitoring) | `feature/files` (suggested) | `backend/app/` (actual) | live folder management and all-file USB transfer alerts implemented | USB device/volume association |
-| 3. Network Monitoring + Anomaly Detection | Module 7: Traffic Analysis | `feature/np` | `backend/network/` | **done (v0.1.0)** | — |
+| 3. Network Monitoring + Anomaly Detection | Module 7: Traffic Analysis | `feature/np` | `backend/network/` | **done (v0.1.0)**; live Network Analysis via combined launcher, opt-in cross-platform capture (macOS verified, Windows UNTESTED) | — |
 | 4. Correlation Engine + Backend Integration + Reports | Correlation + Backend + Reports (XML) | `feature/correlation` (suggested) | `backend/app/` (file/USB service) | file/USB integrated; network and reports pending | parts 1, 2, 3 |
 
 Branch names remain suggested. The actual file/USB backend is `backend/app/`,
@@ -137,9 +137,12 @@ Location `backend/network/`. Run everything with `python -m` from the repo root
 | `db.py` | SQLite schema + parameterized queries. |
 | `detector.py` | The four anomaly rules + `Flow`/`IntervalStats`/`Alert` types. |
 | `capture.py` | PyShark live capture, pcap replay, and a simulation engine; flow aggregation. |
+| `platform_support.py` | Cross-platform TShark lookup, `tshark -D` parsing, interface auto-detection and permission errors. |
 | `serializers.py` | DB rows -> exact frontend JSON (camelCase + casing). |
 | `api.py` | Flask blueprint: the three `/api/network/*` routes. |
-| `app.py` | Runnable app (CORS enabled, `/api/health`). |
+| `app.py` | Standalone network-only app (CORS enabled, `/api/health`). |
+| `integration.py` | Initializes the network DB and mounts the blueprint in the shared app. |
+| `combined.py` | One-process launcher for shared USB/file monitoring + network routes. |
 | `correlation.py` | `get_events_in_window()` / `tag_usb_session()` for part 4. |
 | `simulate_exfil.py` | Demo that reproduces the mock exfiltration scenario (no real traffic). |
 | `tests/` | pytest: detector rules + endpoint contract + capture engine. |
@@ -162,7 +165,7 @@ Severity `low|medium|high` derives from z-score + bytes and maps to the frontend
 **SQLite tables** (each with indexes on timestamps)
 `network_events`, `connections`, `traffic_stats`, `alerts`, `capture_sessions`.
 
-**Endpoints** (base `http://localhost:5000/api`, blueprint under `/api`)
+**Endpoints** (blueprint under `/api`; standalone base `http://localhost:5000/api`, combined example `http://127.0.0.1:5001/api`)
 
 | Config key (`api.js`) | Endpoint | Shape |
 |-----------------------|----------|-------|
@@ -171,6 +174,8 @@ Severity `low|medium|high` derives from z-score + bytes and maps to the frontend
 | `trafficSeries` | `GET /api/network/traffic` | array of 30-min buckets `{ time ('08:00'), outbound (MB), inbound (MB), suspicious (MB) }` |
 
 `/events` and `/traffic` accept optional `?start=&end=` ISO 8601 UTC filters.
+The routes return bare arrays/objects; the frontend network normalizers validate
+and map them directly rather than changing this module contract.
 
 **Functions for the correlation engine**
 
@@ -187,17 +192,39 @@ stop_capture()
 
 **Environment variables**: `EXFILTRACE_NETWORK_DB` (SQLite path),
 `EXFILTRACE_API_HOST` (default `0.0.0.0`), `EXFILTRACE_API_PORT` (default `5000`).
-Also `EXFILTRACE_IFACE`, `EXFILTRACE_INTERVAL`, `EXFILTRACE_ANOMALY_K`,
+Also `EXFILTRACE_IFACE` (auto-detect when unset), `EXFILTRACE_TSHARK_PATH`,
+`EXFILTRACE_INTERVAL`, `EXFILTRACE_ANOMALY_K`,
 `EXFILTRACE_MIN_BASELINE`, `EXFILTRACE_MIN_ABSOLUTE_BYTES`, `EXFILTRACE_FIRST_SEEN_BYTES`,
 `EXFILTRACE_TRAFFIC_BUCKET`, `EXFILTRACE_SIM_INTERVAL`, `EXFILTRACE_SIM_LOCAL_IP`.
 
 **Run / test**
 
 ```bash
-python -m backend.network.app                 # API on :5000
-python -m backend.network.simulate_exfil      # populate a demo DB + print report
-python -m pytest backend/network/tests -q     # 24 tests
+# Demo database lives in the platform temp directory (works on macOS/Windows):
+DEMO_DB="$(python3 -c 'import tempfile, pathlib; print(pathlib.Path(tempfile.gettempdir()) / "exfil_demo.db")')"
+python3 -m backend.network.simulate_exfil --db "$DEMO_DB"
+EXFILTRACE_NETWORK_DB="$DEMO_DB" python3 -m backend.network.combined \
+  --config backend/config.json --host 127.0.0.1 --port 5001
+
+# Optional live capture (opt-in; metadata only, no payloads/PCAP).
+# The interface is auto-detected; override with --interface "Wi-Fi" or an index.
+python3 -m backend.network.combined --config backend/config.json \
+  --host 127.0.0.1 --port 5001 --live-capture --capture-seconds 120
+
+# Frontend (another terminal):
+VITE_API_URL=http://127.0.0.1:5001/api npm run dev
+
+# Standalone network-only app / tests:
+python3 -m backend.network.app                 # API on :5000
+python3 -m pytest backend/network/tests -q     # 67 tests
 ```
+
+The combined launcher keeps the network SQLite file separate from the shared
+USB/file database. Network initialization failure is logged and skipped so the
+shared endpoints continue to run. Network capture is not started automatically:
+live capture requires `--live-capture` (non-promiscuous by default, with
+`--promiscuous` as an explicit opt-in). The page shows stored events and an
+unavailable/retry state if data or capture is missing.
 
 ---
 
@@ -320,13 +347,15 @@ shape. *Suggestion — confirm and record the real name here later.*
 * **macOS AirPlay Receiver occupies port 5000.** Use `EXFILTRACE_API_PORT=5001`
   for local dev (and set `VITE_API_URL=http://localhost:5001/api`), or turn off
   AirPlay Receiver (System Settings → General → AirDrop & Handoff).
-* **Packet capture needs TShark/Wireshark and admin rights.** Live capture is
-  unavailable without them; the network module's **simulation mode** works
-  without either.
+* **Packet capture needs TShark/Wireshark and capture permissions, not sudo.**
+  macOS uses Wireshark's ChmodBPF helper; Windows uses Npcap (enable non-admin
+  capture or run the terminal as Administrator). Interface names and temp paths
+  are auto-detected. Live capture is opt-in; **simulation mode** works without
+  TShark. Windows capture remains UNTESTED ON WINDOWS.
 * **Stop your dev servers** (backend + `npm run dev`) after testing.
 * **Dashboard, USB Forensics and File Monitoring use live file/USB data.**
-  Network Analysis, unified Incidents and Reports are labeled sample previews.
-  Network is not connected and sample findings never appear on the live dashboard.
+  Network Analysis uses the live network routes when the combined launcher is
+  running. Unified Incidents and Reports remain labeled sample previews.
 * **Times shown in the browser are local time** (IST here) while the API stores
   UTC — expected.
 
@@ -338,9 +367,12 @@ shape. *Suggestion — confirm and record the real name here later.*
 - [x] Config, time helpers, SQLite schema + queries.
 - [x] Detector (4 rules) + capture engine (live/pcap/simulate) with background thread.
 - [x] Flask API (3 endpoints) + correlation helper + exfil demo.
-- [x] Tests (24) covering detector, endpoint contract, capture engine.
-- [ ] Test **live** capture with TShark/PyShark (install Wireshark, `pip install pyshark`, run with elevated rights).
-- [ ] Test on **Windows**.
+- [x] Tests (67) covering detector, endpoint contract, capture engine, combined-app mounting and cross-platform mocks.
+- [x] Network Analysis polls the live routes; network DB/blueprint failure does not stop USB/file monitoring.
+- [x] Opt-in `--live-capture` in the combined launcher with interface validation, metadata-only flows, loopback/backend-traffic filtering and clean timeout/shutdown (mocked tests).
+- [x] Test **live** capture with TShark/PyShark on macOS (Wireshark/ChmodBPF installed; no sudo required).
+- [x] Cross-platform TShark lookup, interface auto-detection, tempdir paths and permission messages (mocked tests).
+- [ ] Test **live** capture on **Windows** (UNTESTED ON WINDOWS).
 - [ ] Make the demo history more realistic (several hours of baseline so the chart shows a real ramp+spike).
 - [ ] Fix/explain the 96-byte DNS packet to the exfil IP being flagged HIGH.
 - [ ] Wire capture start/stop to USB session start/stop (depends on **part 1**).
@@ -409,3 +441,7 @@ shape. *Suggestion — confirm and record the real name here later.*
 | 2026-10-11 | Network module (part 3) | **Port 5001 for local testing** because macOS AirPlay Receiver holds port 5000. `EXFILTRACE_API_PORT=5001`, `VITE_API_URL=http://localhost:5001/api`. |
 | 2026-10-11 | Network module (part 3) | **Simulation mode** in the network module so development and demos work without root or TShark. |
 | 2026-10-11 | Network module (part 3) | The **96-byte DNS packet to the exfil IP** is flagged HIGH in the demo; this may be adjusted (it is real behaviour of the rule set, not a bug per se). |
+| 2026-11-02 | Network module (part 3) | **Combined launcher, separate databases.** `backend.network.combined` mounts the existing network blueprint beside the shared USB/file service; network setup failure is isolated and the frontend uses network-specific bare-payload normalizers. |
+| 2026-11-02 | Network module (part 3) | **Live capture is opt-in and metadata-only.** `--live-capture` auto-detects a suitable interface, refuses the demo database, validates `tshark -D`, filters loopback/backend polling traffic and stores no payloads. USB/file routes remain up if capture is unavailable. |
+| 2026-11-02 | Network module (part 3) | **Live hostnames stay metadata-only.** DNS A/AAAA answers and TLS SNI are read from PyShark's nested JSON layers and associated with later flows; no packet payloads or PCAPs are stored. |
+| 2026-11-02 | Network module (part 3) | **Capture setup is cross-platform.** No hardcoded interface, tempfile-based DB paths, TShark lookup via flag/env/PATH/common installs, macOS/Windows permission messages, Windows Proactor event loop, and SIGTERM only where supported. macOS is verified; Windows is mock-tested and UNTESTED ON WINDOWS. |

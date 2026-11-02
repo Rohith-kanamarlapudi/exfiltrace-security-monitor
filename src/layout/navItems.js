@@ -5,7 +5,7 @@ export const NAV_ITEMS = [
   { to: '/usb', label: 'USB Forensics', icon: Usb },
   { to: '/usb-recovery', label: 'USB Recovery', icon: FileSearch },
   { to: '/files', label: 'File Monitoring', icon: FileSearch },
-  { to: '/network', label: 'Network (sample)', icon: Network },
+  { to: '/network', label: 'Network', icon: Network },
   { to: '/incidents', label: 'Incidents (sample)', icon: ShieldAlert },
   { to: '/reports', label: 'Reports (sample)', icon: FileText },
 ]

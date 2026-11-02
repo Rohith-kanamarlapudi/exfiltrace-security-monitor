@@ -9,24 +9,42 @@ from __future__ import annotations
 
 import ipaddress
 import os
+import tempfile
+from pathlib import Path
 from typing import Tuple
 
 # --------------------------------------------------------------------------
 # Storage
 # --------------------------------------------------------------------------
-_DEFAULT_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exfiltrace_network.db")
+_DEFAULT_DB = Path(__file__).resolve().parent / "exfiltrace_network.db"
 
 
 def get_db_path() -> str:
     """Return the SQLite path, overridable via ``EXFILTRACE_NETWORK_DB``."""
-    return os.environ.get("EXFILTRACE_NETWORK_DB") or _DEFAULT_DB
+    return os.environ.get("EXFILTRACE_NETWORK_DB") or str(_DEFAULT_DB)
+
+
+def temp_dir() -> Path:
+    """Return the platform temporary directory as a path."""
+    return Path(tempfile.gettempdir())
+
+
+def default_live_db() -> Path:
+    """Default SQLite file for opt-in live capture (never the demo database)."""
+    return temp_dir() / "exfil_live.db"
+
+
+def default_demo_db() -> Path:
+    """Default SQLite file for the simulated demo database."""
+    return temp_dir() / "exfil_demo.db"
 
 
 # --------------------------------------------------------------------------
 # Capture
 # --------------------------------------------------------------------------
-#: Interface to sniff. ``None`` lets PyShark/tshark pick a default; on macOS the
-#: usual value is ``en0``, on Windows a name like ``\\Device\\NPF_{GUID}``.
+#: Interface to sniff. ``None`` means auto-detect a suitable non-loopback
+#: interface; set it to a TShark index, device name or friendly name.
+#: Windows device names look like ``\\Device\\NPF_{GUID}``.
 CAPTURE_INTERFACE: str | None = os.environ.get("EXFILTRACE_IFACE") or None
 
 #: Aggregation interval for live stats/detection, in seconds.

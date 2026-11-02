@@ -74,7 +74,7 @@ scenario end to end.
 
 ## 2. What was verified
 
-* **Tests:** `python3 -m pytest backend/network/tests -q` -> **24 passed**
+* **Tests:** `python3 -m pytest backend/network/tests -q` -> **67 passed** (includes cross-platform mocks)
   (detector rules, endpoint response contract incl. exact field names/casing,
   capture engine + simulation).
 * **Exfiltration demo:** `python3 -m backend.network.simulate_exfil` populates a
@@ -96,16 +96,16 @@ scenario end to end.
   reverted with `git checkout src/services/api.js` so `src/` stays
   frontend-owned.
 * Demo stats above independently reproduced against a fresh DB
-  (`/tmp/exfil_check.db`): `packetsCaptured=42111`, `outboundBytes=58938452`,
+  (`<tempdir>/exfil_check.db`): `packetsCaptured=42111`, `outboundBytes=58938452`,
   `activeConnections=12`, `suspiciousConnections=1`.
 
 ---
 
 ## 3. Known limitations
 
-* **Live capture with TShark/PyShark is not yet tested** — TShark/Wireshark is
-  not installed on the dev Mac. Only simulation and the code path for live/pcap
-  are implemented (live path is covered by unit tests with fakes).
+* **Live capture with TShark/PyShark is verified on macOS** (Wireshark/ChmodBPF,
+  no sudo). Live/Windows setup paths are covered by mocked tests; Windows itself
+  is UNTESTED ON WINDOWS.
 * **Demo history is short** — only ~2 buckets of meaningful history, so the
   traffic chart shows a ramp (baseline intervals are quiet and compressed)
   rather than a realistic hours-long baseline with a spike.
@@ -119,16 +119,16 @@ scenario end to end.
   time (IST here). This is expected but can confuse during demos.
 * **Port 5000 conflict:** macOS AirPlay Receiver holds port 5000, so local
   testing used 5001 (`EXFILTRACE_API_PORT=5001`).
-* **Windows target untested.** The module avoids OS-specific code, but it has
-  only been exercised on macOS.
+* **Windows target untested.** TShark lookup, Npcap interface names and
+  permission errors are mock-tested; real Windows capture remains
+  UNTESTED ON WINDOWS.
 
 ---
 
 ## 4. Remaining work for this module
 
-- [ ] Test **live** capture with TShark/PyShark: install Wireshark,
-      `pip install pyshark`, run with elevated rights on a chosen interface.
-- [ ] Test on **Windows** (interface names, Npcap).
+- [x] Test **live** capture with TShark/PyShark on macOS (no sudo).
+- [ ] Test on **Windows** (interface names, Npcap, permissions) — UNTESTED ON WINDOWS.
 - [ ] Make the demo data more realistic (several hours of baseline traffic so
       the chart shows a genuine spike).
 - [ ] Fix or explain the **DNS-to-exfil-IP HIGH** row.

@@ -1,11 +1,12 @@
-﻿import { mockNetworkEvents, mockNetworkStats, mockTrafficSeries, mockIncidents, mockReports } from '../data/mockData.js'
-import { normalizeList, normalizeObject, normalizeUsbDevices, normalizeUsbSimulation } from './normalize.js'
+import { mockIncidents, mockReports } from '../data/mockData.js'
+import { normalizeList, normalizeNetworkEvents, normalizeNetworkStats, normalizeNetworkTraffic, normalizeObject, normalizeUsbDevices, normalizeUsbSimulation } from './normalize.js'
 
 // Direct requests; Flask enables CORS. VITE_API_URL includes /api.
 export const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://127.0.0.1:5000/api').replace(/\/$/, '')
 export const ENDPOINTS = {
   status: '/status', usbDevices: '/usb/devices', usbEvents: '/usb/events',
   fileEvents: '/files/events', sensitiveFiles: '/files/sensitive', fileStats: '/files/stats', alerts: '/alerts',
+  networkEvents: '/network/events', networkStats: '/network/stats', networkTraffic: '/network/traffic',
 }
 export async function get(path, { signal } = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, { signal, cache: 'no-store' })
@@ -50,8 +51,8 @@ export async function changeMonitoredFolder(action, path, previousPath) {
 }
 export const getAlerts = list(`${ENDPOINTS.alerts}?limit=200`)
 // Explicit preview pages only; never a fallback for failed live requests.
-export const getNetworkEvents = async () => mockNetworkEvents
-export const getNetworkStats = async () => mockNetworkStats
-export const getTrafficSeries = async () => mockTrafficSeries
+export const getNetworkEvents = async (options) => normalizeNetworkEvents(await get(ENDPOINTS.networkEvents, options))
+export const getNetworkStats = async (options) => normalizeNetworkStats(await get(ENDPOINTS.networkStats, options))
+export const getTrafficSeries = async (options) => normalizeNetworkTraffic(await get(ENDPOINTS.networkTraffic, options))
 export const getIncidents = async () => mockIncidents
 export const getReports = async () => mockReports

@@ -36,3 +36,48 @@ export function normalizeUsbSimulation(payload) {
   if (data.alert && data.alert.simulated !== true || data.observation && data.observation.simulated !== true) throw new Error('Simulation response must explicitly mark synthetic observations and alerts')
   return data
 }
+
+const NETWORK_DIRECTIONS = new Set(['OUTBOUND', 'INBOUND', 'INTERNAL'])
+const NETWORK_RISKS = new Set(['LOW', 'MEDIUM', 'HIGH'])
+const isCount = (value) => Number.isInteger(value) && value >= 0
+const isText = (value) => typeof value === 'string' && value.length > 0
+
+function networkArray(payload, label) {
+  if (!Array.isArray(payload)) throw new Error(`Expected network ${label} array`)
+  return payload
+}
+
+export function normalizeNetworkEvents(payload) {
+  return networkArray(payload, 'events').map((row) => {
+    if (!row || typeof row !== 'object' || Array.isArray(row)) throw new Error('Invalid network event')
+    const event = camelCase(row)
+    if (!isText(event.id) || !isText(event.timestamp) || !isText(event.sourceIp) ||
+        !isText(event.destinationIp) || !isText(event.destinationHost) || !isText(event.protocol) ||
+        !(event.port === null || (Number.isInteger(event.port) && event.port >= 0)) ||
+        !isCount(event.packetSizeBytes) || !NETWORK_DIRECTIONS.has(event.direction) ||
+        !NETWORK_RISKS.has(event.risk) || !(event.usbSession === null || typeof event.usbSession === 'string')) {
+      throw new Error('Invalid network event')
+    }
+    return event
+  })
+}
+
+export function normalizeNetworkStats(payload) {
+  const stats = camelCase(payload)
+  if (!stats || Array.isArray(stats) || typeof stats !== 'object' ||
+      !['packetsCaptured', 'outboundBytes', 'activeConnections', 'suspiciousConnections'].every((key) => isCount(stats[key]))) {
+    throw new Error('Invalid network stats')
+  }
+  return stats
+}
+
+export function normalizeNetworkTraffic(payload) {
+  return networkArray(payload, 'traffic').map((row) => {
+    if (!row || typeof row !== 'object' || Array.isArray(row)) throw new Error('Invalid network traffic bucket')
+    const bucket = camelCase(row)
+    if (!isText(bucket.time) || !['outbound', 'inbound', 'suspicious'].every(
+      (key) => typeof bucket[key] === 'number' && Number.isFinite(bucket[key]) && bucket[key] >= 0,
+    )) throw new Error('Invalid network traffic bucket')
+    return bucket
+  })
+}
