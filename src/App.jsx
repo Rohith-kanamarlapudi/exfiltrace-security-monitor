@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './layout/Layout'
 import Dashboard from './pages/Dashboard'
 import USBForensics from './pages/USBForensics'
+import USBRecovery from './pages/USBRecovery'
 import FileMonitoring from './pages/FileMonitoring'
 import NetworkAnalysis from './pages/NetworkAnalysis'
 import Incidents from './pages/Incidents'
@@ -13,6 +14,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
         <Route path="usb" element={<USBForensics />} />
+        <Route path="usb-recovery" element={<USBRecovery />} />
         <Route path="files" element={<FileMonitoring />} />
         <Route path="network" element={<NetworkAnalysis />} />
         <Route path="incidents" element={<Incidents />} />

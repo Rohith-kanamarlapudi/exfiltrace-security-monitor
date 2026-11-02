@@ -1,5 +1,41 @@
 # USB interface inspection and metadata fingerprints
 
+## USB Recovery
+
+`/usb-recovery` is a separate, local-only recovery workflow. USB Forensics
+remains limited to device inspection, metadata fingerprints and the isolated
+BadUSB simulation.
+
+Recovery accepts either a connected, completely inspected FAT32 USB volume or
+an existing raw image on a verified internal fixed disk. Connected volumes are
+opened read-only, copied to a new `.img` on an internal disk, and then scanned
+only from that saved image. Imported images are copied before use as well.
+Each complete image carries a SHA-256 digest; scanning and reconstruction verify
+the digest before and after their work. A changed image invalidates the attempt.
+
+The page and `GET /api/usb/recovery` expose source choices, job history, progress,
+candidate entries and recovery results. Mutations use `POST /api/usb/recovery/jobs`
+or `POST /api/usb/recovery/jobs/<id>` and require a loopback backend/page origin
+plus `X-ExfilTrace-Recovery: 1`. Only one acquire, import, scan or recovery job
+can run at once; the active operation can be cancelled. Jobs survive restarts;
+an unfinished job becomes `interrupted` and partial bytes remain marked as such.
+
+Deleted FAT32 entries are enumerated and reconstructed through The Sleuth Kit
+(`fsstat`, `fls`, `icat`). Install it separately and set `EXFILTRACE_TSK_DIR` to
+its `bin` directory before starting the backend. The implementation is deliberately
+limited to valid FAT32 volume/raw images (with an optional partition byte offset),
+does not carve files, and writes each recovery attempt to a new directory on a
+verified internal fixed disk. Output names are sanitized, use `.unverified`, and
+never replace existing files. Recovery-generated artifacts are excluded from the
+file-monitoring alert pipeline.
+
+This is best-effort reconstruction, not proof of recovery. Cleared FAT chains,
+fragmentation, reused clusters and overwritten content can yield incorrect output
+even if metadata and byte counts look plausible. It also does not provide a
+software write-blocker: while acquisition itself uses a read-only Windows handle,
+other software may write to a mounted source volume. Verify all output
+independently and use a hardware write blocker for evidentiary acquisition.
+
 Windows storage mapping still uses PowerShell/CIM and `Get-CimAssociatedInstance`
 for disks → partitions → logical drives. Drive letters are discovered each poll;
 all roots feed the existing automatic filesystem watches. The Windows backend now

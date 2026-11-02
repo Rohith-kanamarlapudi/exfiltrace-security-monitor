@@ -28,6 +28,15 @@ async function changeUsbSimulation(method, body) {
 export const startUsbSimulation = (deviceId) => changeUsbSimulation('POST', { deviceId })
 export const clearUsbSimulation = () => changeUsbSimulation('DELETE')
 export const getUsbEvents = list(`${ENDPOINTS.usbEvents}?limit=200`)
+export const getUsbRecovery = async (options) => (await get('/usb/recovery', options)).data
+export async function changeUsbRecovery(body, jobId) {
+  const response = await fetch(`${API_BASE_URL}/usb/recovery/jobs${jobId ? `/${encodeURIComponent(jobId)}` : ''}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-ExfilTrace-Recovery': '1' }, body: JSON.stringify(body),
+  })
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload.error || `Recovery: HTTP ${response.status}`)
+  return payload.data
+}
 export const getFileEvents = list(`${ENDPOINTS.fileEvents}?limit=200`)
 export const getSensitiveFiles = list(`${ENDPOINTS.sensitiveFiles}?limit=100`)
 export const getFileStats = async (options) => normalizeObject(await get(ENDPOINTS.fileStats, options))
